@@ -1,6 +1,9 @@
-from functions import *
+class Automate :
 
-def affichage (path):
-    with open(path, mode="r", encoding="utf-8") as automate:
-        contenu = automate.read()
-        return contenu
+    def __init__(self, alphabet, etats, initial, final, transition):
+        self.alphabet = alphabet
+        self.etat = etats
+        self.initial = initial
+        self.final = final
+        self.transition = transition
+

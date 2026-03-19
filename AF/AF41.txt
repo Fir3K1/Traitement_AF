@@ -3,15 +3,15 @@
 1 0
 4 1 2 3 4 
 12
-0a1
-1a2
-2a2
-2b3
-1b3
-3aP
-3bP
-0b4
-4aP
-4bP
-PaP
-PbP
+0 a 1
+1 a 2
+2 a 2
+2 b 3
+1 b 3
+3 a P
+3 b P
+0 b 4
+4 a P
+4 b P
+P a P
+P b P

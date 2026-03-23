@@ -94,6 +94,18 @@ def lecture_automate(chemin):
     return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
 
 #print(lecture_automate(r"C:\Users\tsunt\Desktop\Traitement_AF\AF\AF5.txt").alphabet)
+def Completion(self, etats, transitions):
+    #on parcours tous les etats et leurs transitions pour detecter si une transition manque
+    for etats in etats:
+
+    
+    #on ajoute l'etat poubelle p à la liste d'états
+
+    #on redirige les transitions manquantes vers cet état poubelle
+
+    #l'état poubelle a ses propres transitions vers lui meme pour chaque lettre
+
+
 
 
 test = Automate(['a', 'b'],
@@ -108,3 +120,4 @@ test = Automate(['a', 'b'],
          )
 
 print(test.Minimisation())
+

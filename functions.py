@@ -1,3 +1,7 @@
+from tabulate import tabulate
+
+
+
 class Automate :
 
     def __init__(self, alphabet, etats, initial, final, transitions):
@@ -6,6 +10,15 @@ class Automate :
         self.initial = initial  #['1', '3']
         self.final = final  #['2', '4']
         self.transitions = transitions    #[('0', 'a', '0'), ('0', 'b', '0'), ('1', 'a', '2'), ('1', 'b', '0'), ('3', 'a', '0'), ('3', 'b', '4')]
+
+    def __str__(self):
+        return (
+            f"Alphabet : {self.alphabet}\n"
+            f"Etats : {self.etats}\n"
+            f"Initial : {self.initial}\n"
+            f"Final : {self.final}\n"
+            f"Transitions : {self.transitions}\n"
+        )
 
     def Appartenance_groupe(self, destination: int, groupes: dict):
         """renvoie le nom du groupe auquel la destination appartient"""
@@ -62,19 +75,19 @@ class Automate :
 def lecture_automate(chemin):
 
     with open(chemin, 'r') as AF:
-        donnees = [ligne.strip() for ligne in AF.readlines()]
+        lignes = [ligne.strip() for ligne in AF.readlines()]
 
-    nb_transitions = int(donnees[4]) # int : nombre de transitions
+    nb_transitions = int(lignes[4]) # int : nombre de transitions
 
-    etats_initiaux = donnees[2].split()[1:] # char : récupère l'état initial
-    etats_finaux = donnees[3].split()[1:] # char : récupère l'état final
+    etats_initiaux = lignes[2].split()[1:] # char : récupère l'état initial
+    etats_finaux = lignes[3].split()[1:] # char : récupère l'état final
 
     transitions = [] # liste dans laquel il y aura des tuples de trois éléments (départ, lettre, arrivée) représentant une transition
     lettres = [] # liste des lettres 
     etats = [] #liste des états
 
-    for donnee in donnees[5:5+nb_transitions]:
-        depart, lettre, arrivee = donnee.split() #récupère les éléments (char) qui son séparés d'un espace
+    for ligne in lignes[5:5+nb_transitions]:
+        depart, lettre, arrivee = ligne.split() #récupère les éléments (char) qui son séparés d'un espace
 
         transitions.append((depart, lettre, arrivee)) #insère le tuple dans la liste des transitions
 
@@ -108,3 +121,39 @@ test = Automate(['a', 'b'],
          )
 
 print(test.Minimisation())
+
+
+def Affichage(alphabet, etats, etats_initiaux, etats_finaux, transitions):
+    donnee = []
+    en_tete =[' ', ' '] + alphabet
+
+    for etat in etats:
+        ligne = []
+
+        if etat in etats_initiaux and etat in etats_finaux:
+            ligne.append('ES')
+        elif etat in etats_initiaux:
+            ligne.append('E')
+        elif etat in etats_finaux:
+            ligne.append('S')
+        else :
+            ligne.append(' ')
+
+        ligne.append(etat)
+
+        for lettre in alphabet:
+            arrivee = []
+            for elt in transitions:
+                if elt[0] == etat and elt[1] == lettre:
+                    arrivee.append(elt[2])
+
+            ligne.append(','.join(arrivee))
+
+        donnee.append(ligne)
+ 
+    colonne = ["center"]*(2 + len(alphabet))
+
+    return tabulate(donnee, en_tete, tablefmt="fancy_grid", colalign=colonne)
+   
+
+

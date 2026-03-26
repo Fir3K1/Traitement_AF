@@ -1,6 +1,3 @@
-from tabulate import tabulate
-
-
 class Automate :
 
     def __init__(self, alphabet, etats, initial, final, transitions):
@@ -142,9 +139,6 @@ class Automate :
         return res
 
 
-
-
-
     def Minimisation(self):
         terminaux = self.final.copy()
         print(terminaux)
@@ -163,19 +157,19 @@ class Automate :
 def lecture_automate(chemin):
 
     with open(chemin, 'r') as AF:
-        lignes = [ligne.strip() for ligne in AF.readlines()]
+        donnees = [ligne.strip() for ligne in AF.readlines()]
 
-    nb_transitions = int(lignes[4]) # int : nombre de transitions
+    nb_transitions = int(donnees[4]) # int : nombre de transitions
 
-    etats_initiaux = lignes[2].split()[1:] # char : récupère l'état initial
-    etats_finaux = lignes[3].split()[1:] # char : récupère l'état final
+    etats_initiaux = donnees[2].split()[1:] # char : récupère l'état initial
+    etats_finaux = donnees[3].split()[1:] # char : récupère l'état final
 
     transitions = [] # liste dans laquel il y aura des tuples de trois éléments (départ, lettre, arrivée) représentant une transition
     lettres = [] # liste des lettres 
     etats = [] #liste des états
 
-    for ligne in lignes[5:5+nb_transitions]:
-        depart, lettre, arrivee = ligne.split() #récupère les éléments (char) qui son séparés d'un espace
+    for donnee in donnees[5:5+nb_transitions]:
+        depart, lettre, arrivee = donnee.split() #récupère les éléments (char) qui son séparés d'un espace
 
         transitions.append((depart, lettre, arrivee)) #insère le tuple dans la liste des transitions
 
@@ -195,6 +189,31 @@ def lecture_automate(chemin):
     return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
 
 #print(lecture_automate(r"C:\Users\tsunt\Desktop\Traitement_AF\AF\AF5.txt").alphabet)
+
+def Completion(self):
+    #on définir la poubelle
+    p=len(self.etats)
+    #on parcours tous les etats et leurs transitions pour detecter si une transition manque
+    for etat in self.etats:
+        for lettre in self.alphabet:
+            trouve=False
+            for transi in self.transitions:
+                if transi[0]==etat and transi[1]==lettre:
+                    trouve=True
+            if trouve==False:
+                new_transi=(etat,lettre,p)
+                self.transitions.append(new_transi) #on redirige les transitions manquantes vers cet état poubelle
+
+    self.etats.append(p)
+    #on ajoute l'etat poubelle p à la liste d'états
+    for lettre in self.alphabet:
+        new_transi=(p, lettre,p )
+        self.transitions.append(new_transi)
+        #l'état poubelle a ses propres transitions vers lui meme pour chaque lettre
+
+
+
+
 
 
 test = Automate(['a', 'b'],
@@ -238,10 +257,10 @@ def Affichage(alphabet, etats, etats_initiaux, etats_finaux, transitions):
             ligne.append(','.join(arrivee))
 
         donnee.append(ligne)
- 
+
     colonne = ["center"]*(2 + len(alphabet))
 
     return tabulate(donnee, en_tete, tablefmt="fancy_grid", colalign=colonne)
-   
+
 
 

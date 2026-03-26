@@ -163,6 +163,7 @@ def lecture_automate(chemin):
         donnees = [ligne.strip() for ligne in AF.readlines()]
 
     nb_transitions = int(donnees[4]) # int : nombre de transitions
+    nb_etats = int(donnees[1])
 
     etats_initiaux = donnees[2].split()[1:] # char : récupère l'état initial
     etats_finaux = donnees[3].split()[1:] # char : récupère l'état final
@@ -181,13 +182,8 @@ def lecture_automate(chemin):
                 lettres.append(lettre)
         lettres.sort() #range dans l'ordre
 
-        if depart not in etats:
-            etats.append(depart)
-
-        if arrivee not in etats:
-                etats.append(arrivee)
-            
-        etats.sort()
+    for i in range (nb_etats):
+        etats.append(str(i))
 
     return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
 
@@ -262,6 +258,8 @@ def Affichage(alphabet, etats, etats_initiaux, etats_finaux, transitions):
         donnee.append(ligne)
 
     colonne = ["center"]*(2 + len(alphabet))
+
+    print(donnee)
 
     return tabulate(donnee, en_tete, tablefmt="fancy_grid", colalign=colonne)
 

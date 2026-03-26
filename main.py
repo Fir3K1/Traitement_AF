@@ -31,6 +31,6 @@ def main():
             print("Automate standardisé :")
             print(Affichage(automate.alphabet, automate.etats, automate.initial, automate.final, automate.transitions))
 
-    print("Fin")
+    print("Fin\n")
     
 main()

@@ -1,3 +1,5 @@
+from tabulate import tabulate
+
 class Automate :
 
     def __init__(self, alphabet, etats, initial, final, transitions):
@@ -45,6 +47,7 @@ class Automate :
                         break
                 if not trouve:
                     print(f"Non complet : pas de transition de {e} avec le symbole {l} !")
+                    return False
         return True #on peut retourner trouve aussi, mais pour être rigoureux, on retourne True.
 
     def est_standard(self):

@@ -1,7 +1,6 @@
 from tabulate import tabulate
 
 
-
 class Automate :
 
     def __init__(self, alphabet, etats, initial, final, transitions):
@@ -18,6 +17,92 @@ class Automate :
             f"Initial : {self.initial}\n"
             f"Final : {self.final}\n"
             f"Transitions : {self.transitions}\n"
+        )
+
+    def est_deterministe(self):
+        # 1 seul état initial
+        if len(self.initial)!=1:
+            print("Non déterministe : on retrouve plusieurs états initiaux !")
+            return False
+        transition_vues=set()
+        for transition in self.transitions:
+            e = transition[0]  # état de départ
+            l = transition[1]  # symbole
+            f = transition[2]  # état d’arrivée
+            if (e,l) in transition_vues:
+                print(f"Non déterministe : plusieurs transitions depuis {e} avec le même symbole {l} !")
+                return False
+            transition_vues.add((e,l))
+        return True
+
+    def est_complet(self):
+        for e in self.etats:
+            for l in self.alphabet:
+                trouve = False
+                for transition in self.transitions:
+                    tmpe= transition[0]
+                    tmpl= transition[1]
+                    f= transition[2]
+                    if tmpe==e and tmpl==l:
+                        trouve = True
+                        break
+                if not trouve:
+                    print(f"Non complet : pas de transition de {e} avec le symbole {l} !")
+        return True #on peut retourner trouve aussi, mais pour être rigoureux, on retourne True.
+
+    def est_standard(self):
+        # 1 seul état initial
+        if len(self.initial) != 1:
+            print("Non standard : plusieurs états initiaux !")
+            return False
+
+        i = self.initial[0]
+
+        # Aucune transition ne doit arriver vers l'état initial
+        for transition in self.transitions:
+            dep = transition[0]
+            lettre = transition[1]
+            arr = transition[2]
+
+            if arr == i:
+                print(f"Non standard : transition vers l’état initial depuis {dep} avec le symbole {lettre}")
+                return False
+
+        return True
+
+    def standardiser(self):
+        # 1) Si l'automate est déjà standard, on ne fait rien
+        if self.est_standard():
+            print("Déjà standard")
+            return self
+
+        # 2) Créer un nouvel état initial
+        nouveau_init = "i"
+
+        # 3) Ajouter ce nouvel état aux états existants
+        nouveaux_etats = self.etats + [nouveau_init]
+
+        # 4) Copier toutes les transitions existantes
+        nouvelles_transitions = self.transitions.copy()
+
+        # 5) Copier les transitions des anciens états initiaux
+        for ancien_init in self.initial:
+            for transition in self.transitions:
+                dep = transition[0]
+                lettre = transition[1]
+                arr = transition[2]
+
+                # Si une transition part d'un ancien état initial, on la duplique en partant du nouvel état initial
+                if dep == ancien_init:
+                    nouvelles_transitions.append((nouveau_init, lettre, arr))
+
+        # 6) Construire et renvoyer le nouvel automate standardisé
+        return Automate(
+            self.alphabet,
+            nouveaux_etats,
+            [nouveau_init],  # le nouvel état initial
+            self.final,
+            nouvelles_transitions
         )
 
     def Appartenance_groupe(self, destination: int, groupes: dict):
@@ -55,6 +140,9 @@ class Automate :
         for i in range(len(dico2)):
             res[f"I{i + len(dico1)}"] = list(dico2.values())[i]
         return res
+
+
+
 
 
     def Minimisation(self):

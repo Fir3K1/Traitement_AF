@@ -156,6 +156,66 @@ class Automate :
                 groupes_next = self.Fusion_dicos(groupes_next, self.Diviseur_Etat(groupes_temp[cle], groupes_temp))
         return groupes_next
 
+    def recognizes_string(self, word):
+        
+        if not self.est_deterministe():
+            print("Erreur : La reconnaissance de mots nécessite un automate déterministe.")
+            return False
+            
+        word = str(word)
+        if word == "" or word.lower() in ["epsilon", "mot_vide"]:
+            for initial_state in self.initial:
+                if initial_state in self.final:
+                    return True
+            return False
+
+        current_state = None
+        # On n'utilise pas l'index [0] qui peut faire crasher si la liste self.initial est vide
+        for state in self.initial:
+            current_state = state
+            break
+            
+        if current_state is None:
+            return False
+        
+        for char in word:
+            if char not in self.alphabet:
+                return False
+                
+            trouve = False
+            # On parcourt la liste avec une boucle for src, sym, dst comme demandé
+            for src, sym, dst in self.transitions:
+                if str(src) == str(current_state) and str(sym) == str(char):
+                    current_state = dst
+                    trouve = True
+                    break
+                    
+            if not trouve:
+                return False
+                
+        return current_state in self.final
+
+    def get_complementary(self):
+
+        if not self.est_deterministe() or not self.est_complet():
+            print("Erreur : L'automate doit être déterministe et complet (AFDC) pour créer son complémentaire.")
+            return None
+            
+        # Création des nouveaux états finaux (inversion)
+        nouveaux_finaux = []
+        for etat in self.etats:
+            if etat not in self.final:
+                nouveaux_finaux.append(etat)
+        
+        # Création et retour du nouvel automate
+        return Automate(
+            list(self.alphabet), 
+            list(self.etats), 
+            list(self.initial), 
+            nouveaux_finaux, 
+            list(self.transitions)
+        )
+
 
 def lecture_automate(chemin):
 
@@ -187,46 +247,7 @@ def lecture_automate(chemin):
 
     return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
 
-#print(lecture_automate(r"C:\Users\tsunt\Desktop\Traitement_AF\AF\AF5.txt").alphabet)
 
-def Completion(self):
-    #on définir la poubelle
-    p=len(self.etats)
-    #on parcours tous les etats et leurs transitions pour detecter si une transition manque
-    for etat in self.etats:
-        for lettre in self.alphabet:
-            trouve=False
-            for transi in self.transitions:
-                if transi[0]==etat and transi[1]==lettre:
-                    trouve=True
-            if trouve==False:
-                new_transi=(etat,lettre,p)
-                self.transitions.append(new_transi) #on redirige les transitions manquantes vers cet état poubelle
-
-    self.etats.append(p)
-    #on ajoute l'etat poubelle p à la liste d'états
-    for lettre in self.alphabet:
-        new_transi=(p, lettre,p )
-        self.transitions.append(new_transi)
-        #l'état poubelle a ses propres transitions vers lui meme pour chaque lettre
-
-
-
-
-
-
-test = Automate(['a', 'b'],
-                ['0', '0.1', '0.1.2', '0.3', '0.4'],
-                ['0'],
-                ['0', '0.1', '0.1.2', '0.3'],
-                [("0", "a", "0"), ("0", "b", "0.1"),
-                 ("0.1", "a", "0"), ("0.1", "b", "0.1.2"),
-                 ("0.1.2", "a", "0.3"), ("0.1.2", "b", "0.1.2"),
-                 ("0.3", "a", "0.4"), ("0.3", "b", "0.1"),
-                 ("0.4", "a", "0"),("0.4", "b", "0.1")]
-         )
-
-print(test.Minimisation())
 
 
 def Affichage(alphabet, etats, etats_initiaux, etats_finaux, transitions):
@@ -259,7 +280,7 @@ def Affichage(alphabet, etats, etats_initiaux, etats_finaux, transitions):
 
     colonne = ["center"]*(2 + len(alphabet))
 
-    print(donnee)
+
 
     return tabulate(donnee, en_tete, tablefmt="fancy_grid", colalign=colonne)
 

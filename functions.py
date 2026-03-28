@@ -144,7 +144,6 @@ class Automate :
 
     def Minimisation(self):
         terminaux = self.final.copy()
-        print(terminaux)
         non_terminaux = [x for x in self.etats if x not in terminaux]
         groupes_temp = {"I0": terminaux, "I1": non_terminaux}
         groupes_next = self.Fusion_dicos(self.Diviseur_Etat(groupes_temp['I0'], groupes_temp),

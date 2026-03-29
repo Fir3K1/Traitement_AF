@@ -1,0 +1,30 @@
+============================================================
+  AUTOMATE N°1
+============================================================
+
+[Automate initial]
+╒═════╤═════════╕
+│     │  etats  │
+╞═════╪═════════╡
+│ ES  │    0    │
+╘═════╧═════════╛
+
+--- Test : standard ---
+
+--- Test : déterministe ---
+
+--- Test : complet ---
+
+--- Déterminisation et complétion ---
+
+--- Minimisation ---
+
+--- Reconnaissance de mots ---
+  ''           → RECONNU
+
+--- Automate complémentaire (depuis AFDC) ---
+╒═════╤═════════╕
+│     │  etats  │
+╞═════╪═════════╡
+│  E  │    0    │
+╘═════╧═════════╛

@@ -1,118 +1,166 @@
 from functions import *
 
 def main():
-    automate = None
-    
+    print("\n" + "="*55)
+    print("   TRAITEMENT D'AUTOMATES FINIS - EFREI P2 2025/2026")
+    print("="*55)
+ 
+    # Boucle externe : permet de traiter plusieurs automates sans relancer
     while True:
-        print("\n" + "="*40)
-        print("          MENU PRINCIPAL")
-        print("="*40)
-        print("1. Charger un automate")
-        print("2. Standardisation")
-        print("3. Déterminisation")
-        print("4. Minimisation")
-        print("5. Reconnaissance de mots")
-        print("6. Créer l'automate complémentaire")
-        print("0. Quitter le programme")
-        
-        while True:
+ 
+        af    = None
+        afdc  = None
+        afdcm = None
+ 
+        # -- Chargement obligatoire avant tout traitement ----------
+        while af is None:
             try:
-                choix = int(input("\nChoisissez une option : "))
-                if 0 <= choix <= 6:
-                    break
-                print("Valeur incorrecte. Veuillez saisir un nombre entre 0 et 6.")
+                num = int(input("\nNumero de l'automate a charger (1-44), ou 0 pour quitter : "))
             except ValueError:
-                print("Valeur incorrecte. Veuillez entrer un entier.")
-
-        if choix == 0:
-            print("Fin du programme. Au revoir !")
-            break
-            
-        elif choix == 1 or automate is None:
-            if automate is None and choix != 1:
-                print("--> Veuillez d'abord charger un automate.")
-            
-            while True:
-                try:
-                    num_AF = int(input("\nSaisissez le numéro de l'automate à charger (1 à 44) : "))
-                    if 1 <= num_AF <= 44:
-                        break
-                    print("Valeur incorrecte. Veuillez taper un nombre entre 1 et 44.")
-                except ValueError:
-                    print("Valeur incorrecte. Veuillez entrer un entier.")
-            
-            chemin = f"AF/AF{num_AF}.txt"
-            automate = lecture_automate(chemin)
-            print(f"\nAutomate n°{num_AF} chargé avec succès !")
-            print(automate.Affichage())
-
-        elif automate is not None:
-            if choix == 2:
-                print("\n--- 2. Standardisation ---")
-                if not automate.est_standard():
-                    choix_std = input("Voulez-vous standardiser cet automate ? (o/n) : ")
-                    if choix_std.lower() == 'o':
-                        automate = automate.standardiser()
-                        print("\nAutomate standardisé :")
-                        print(automate.Affichage())
-                else:
-                    print("L'automate est déjà standard.")
-                    
+                print("  Entier attendu.")
+                continue
+            if num == 0:
+                print("Fin du programme. Au revoir !")
+                return
+            if not (1 <= num <= 44):
+                print("  Numero entre 1 et 44.")
+                continue
+            chemin = f"AF/AF{num}.txt"
+            try:
+                af = lecture_automate(chemin)
+                print(f"\n  Automate n°{num} charge.")
+                print(af.Affichage())
+            except FileNotFoundError:
+                print(f"  Fichier '{chemin}' introuvable.")
+ 
+        # -- Boucle de traitement sur l'automate charge ------------
+        while True:
+            print("\n" + "="*40)
+            print("            MENU")
+            print("="*40)
+            print("  1. Afficher l'automate courant")
+            print("  2. Tests (standard / deterministe / complet)")
+            print("  3. Standardiser")
+            print("  4. Determiniser et completer  -> AFDC")
+            print("  5. Minimiser                  -> AFDCM")
+            print("  6. Reconnaitre des mots")
+            print("  7. Automate complementaire")
+            print("  8. Changer d'automate")
+            print("  0. Quitter")
+ 
+            try:
+                choix = int(input("\nVotre choix : "))
+            except ValueError:
+                print("  Entier attendu.")
+                continue
+ 
+            # -- 0 : Quitter --------------------------------------
+            if choix == 0:
+                print("Fin du programme. Au revoir !")
+                return
+ 
+            # -- 1 : Afficher -------------------------------------
+            elif choix == 1:
+                print(af.Affichage())
+ 
+            # -- 2 : Tests ----------------------------------------
+            elif choix == 2:
+                print("\n  --- Test standard ---")
+                af.est_standard()
+                print("\n  --- Test deterministe ---")
+                af.est_deterministe()
+                print("\n  --- Test complet ---")
+                if af.est_complet():
+                    print("L'automate est complet.")
+ 
+            # -- 3 : Standardisation ------------------------------
             elif choix == 3:
-                print("\n--- 5. Déterminisation ---")
-                automate = automate.Determinisation_et_completion()
-                print("\n[+] L'automate a été déterminisé avec succès et mis à jour en mémoire.")
-                print(automate.Affichage())
-
+                print("\n--- Standardisation ---")
+                if af.est_standard():
+                    print("L'automate est deja standard, aucune action necessaire.")
+                else:
+                    rep = input("Voulez-vous standardiser cet automate ? (o/n) : ").strip().lower()
+                    if rep == 'o':
+                        af   = af.standardiser()
+                        afdc = afdcm = None   # invalider AFDC/AFDCM anterieurs
+                        print("\nAutomate standardise :")
+                        print(af.Affichage())
+ 
+            # -- 4 : Determinisation + completion -----------------
             elif choix == 4:
-                print("\n--- 6. Minimisation ---")
-                automate = automate.Minimisation()
-                print("\n[+] L'automate a été minimisé avec succès et mis à jour en mémoire.")
-                print(automate.Affichage())
-                    
+                print("\n--- Determinisation et completion ---")
+                afdc  = af.Determinisation_et_completion()
+                afdcm = None
+                afdc.Affichage_AFDC()
+ 
+            # -- 5 : Minimisation ---------------------------------
             elif choix == 5:
-                print("\n--- 7. Reconnaissance de mots ---")
-                
-                if not automate.est_deterministe():
-                    print("Action impossible : L'automate n'est pas déterministe.")
-                    print("Veuillez d'abord exécuter la déterminisation ")
+                print("\n--- Minimisation ---")
+                if afdc is None:
+                    print("  Action impossible : veuillez d'abord determiniser (option 4).")
                 else:
-                    print("Tapez 'fin' pour arrêter et revenir au menu principal.")
-                    while True:
-                        mot = input("\nSaisissez un mot à vérifier : ")
-                        
-                        if mot.strip().lower() == "fin":
-                            print("Retour au menu principal...")
-                            break
-                            
-                        if automate.recognizes_string(mot.strip()):
-                            print(f" ==> Le mot est RECONNU par l'automate !")
-                        else:
-                            print(f" ==> Le mot n'est PAS RECONNU par l'automate !")
-
+                    afdcm = afdc.Affichage_Minimisation()
+ 
+            # -- 6 : Reconnaissance de mots -----------------------
             elif choix == 6:
-                print("\n--- 8. Construire l'Automate Complémentaire ---")
-                
-                if not automate.est_deterministe() or not automate.est_complet():
-                    print("Action impossible : L'automate est actuellement non AFDC (Déterministe ET Complet).")
-                    print("Veuillez d'abord exécuter la déterminisation et la complétion.")
+                print("\n--- Reconnaissance de mots ---")
+                cible = afdc if afdc is not None else af
+ 
+                if not cible.est_deterministe():
+                    print("  Action impossible : l'automate n'est pas deterministe.")
+                    print("  Veuillez d'abord executer la determinisation (option 4).")
                 else:
-                    automate_complementaire = automate.get_complementary()
-                    
-                    if automate_complementaire:
-                        print("\n[+] Automate complémentaire généré avec succès !")
-                        print(automate.Affichage(automate_complementaire.alphabet, 
-                                        automate_complementaire.etats, 
-                                        automate_complementaire.initial, 
-                                        automate_complementaire.final, 
-                                        automate_complementaire.transitions))
-                        
-                        remplacer = input("\nVoulez-vous écraser l'automate temporaire en mémoire par celui-ci ? (o/n) : ")
-                        if remplacer.lower() == 'o':
-                            automate = automate_complementaire
-                            print("L'automate courant a été mis à jour dans la mémoire.")
+                    print("  (tapez 'fin' pour revenir au menu)")
+                    while True:
+                        mot = input("\n  Mot a tester : ").strip()
+                        if mot.lower() == 'fin':
+                            print("  Retour au menu...")
+                            break
+                        if cible.lire_mot(mot):
+                            print(f"  ==> '{mot}' est RECONNU par l'automate.")
+                        else:
+                            print(f"  ==> '{mot}' n'est PAS reconnu par l'automate.")
+ 
+            # -- 7 : Automate complementaire ----------------------
+            elif choix == 7:
+                print("\n--- Automate complementaire ---")
+                if afdc is None:
+                    print("  Action impossible : veuillez d'abord determiniser (option 4).")
+                else:
+                    # Le sujet autorise AFDC ou AFDCM au choix
+                    if afdcm is not None:
+                        print("  Construire le complementaire depuis :")
+                        print("    a) L'AFDC")
+                        print("    b) L'AFDCM (automate minimal)")
+                        base_choix = input("  Votre choix (a/b) : ").strip().lower()
+                        base   = afdcm if base_choix == 'b' else afdc
+                        source = "AFDCM" if base_choix == 'b' else "AFDC"
+                    else:
+                        base   = afdc
+                        source = "AFDC"
+ 
+                    print(f"\n  Complementaire construit depuis : {source}")
+                    comp = base.automate_complementaire()
+                    if comp:
+                        print("\n  Automate complementaire :")
+                        if any(isinstance(e, tuple) for e in comp.etats):
+                            comp.Affichage_AFDC("Automate Complementaire")
+                        else:
+                            print(comp.Affichage())
+ 
+                        rep = input("\n  Remplacer l'automate courant par le complementaire ? (o/n) : ").strip().lower()
+                        if rep == 'o':
+                            af   = comp
+                            afdc = afdcm = None
+                            print("  Automate courant mis a jour.")
+ 
+            # -- 8 : Changer d'automate ---------------------------
+            elif choix == 8:
+                break
+ 
             else:
-                print("Option invalide.")
-
+                print("  Option invalide. Choisissez entre 0 et 8.")
+ 
+ 
 if __name__ == "__main__":
     main()

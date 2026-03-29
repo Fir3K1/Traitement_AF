@@ -48,24 +48,6 @@ class Automate :
         return tabulate(donnee, en_tete, tablefmt="fancy_grid", colalign=colonne)
 
 
-    def fermeture_epsilon(self, etats, transitions=None):
-        if transitions is None:
-            transitions = self.transitions
-        #etats est une liste d'états
-        #la fonction retourne tous les états atteignables par epsilon depuis ces états
-        fermeture = list(etats)  #on part des états donnés
-        a_traiter = list(etats)
-        
-        while a_traiter:
-            etat = a_traiter.pop(0)
-            for (dep, lettre, arr) in transitions:
-                if (dep == etat) and (lettre == 'e') and arr not in fermeture:  #e pour epsilon
-                    fermeture.append(arr)
-                    a_traiter.append(arr)
-        
-        return fermeture
-    
-
     def est_standard(self):
         # 1 seul état initial
         if len(self.initial) != 1:
@@ -166,99 +148,101 @@ class Automate :
     
 
     def est_deterministe(self):
-        # 1 seul état initial
+        # 1. Vérifier qu'il n'y a qu'un seul état initial
         if len(self.initial) != 1:
             print(f"Non déterministe : {len(self.initial)} état(s) initial/initiaux.")
             return False
-        
+
+        # 2. Vérifier qu'il n'y a pas de ε-transitions
         if 'e' in self.alphabet:
             print("Non déterministe : l'automate est asynchrone (ε-transitions).")
             return False
 
+        # 3. Vérifier qu'il n'y a pas de transitions multiples pour un même état et symbole
         vus = {}
         for (dep, lettre, arr) in self.transitions:
             cle = (dep, lettre)
             if cle in vus:
-                print(f"Non déterministe : plusieurs transitions depuis '{dep}' par '{lettre}'. ")
+                print(f"Non déterministe : plusieurs transitions depuis '{dep}' par '{lettre}'.")
                 return False
             vus[cle] = True
-        
+
         print("L'automate est déterministe.")
         return True
 
 
-    def Determinisation_et_completion(self):
+    def etat_to_string(self, etat):
+        return ".".join(str(e) for e in etat)
 
-        if self.est_deterministe():
-            if self.est_complet():
-                print("L'automate est déjà déterministe et complet.")
-                return self
-            else :
-                print("L'automate est déterministe mauis incomplet. Complétion : ")
-                return self.Completion()
-
-        alphabet_sync = [l for l in self.alphabet if l != 'e']
-
-        etat_initial = tuple(sorted(self.fermeture_epsilon(self.initial), key=str))
-        a_traiter = [etat_initial]
-        nouveaux_etats = [etat_initial]
-        nouv_transitions = []
-
-        #Ensuite, on déterminise 
+    def fermeture_epsilon(self, etats, transitions):
+        #etats est une liste d'états
+        #la fonction retourne tous les états atteignables par epsilon depuis ces états
+        fermeture = list(etats)  #on part des états donnés
+        a_traiter = list(etats)
+        
         while a_traiter:
-            etat = a_traiter.pop(0) #On prend le 1er element et on le retire de la liste
-
-            for lettre in alphabet_sync: #pour chaque lettre, calcul des etats atteignables
-                cible = [] #represente les etats d'arrivés pour une lettre 
-
-                for sous_etat in etat:
-                    for (dep, l, arr) in self.transitions:
-                        if (dep == sous_etat) and (l == lettre) and (arr not in cible):
-                            cible.append(arr) #liste d'etats atteignables pour chaque lettre de chaque etat
-
-                cible = self.fermeture_epsilon(cible)
-                cible = tuple(sorted(cible, key=str))
-
-                nouv_transitions.append((etat, lettre, cible))
-
-                if cible not in nouveaux_etats: #s'il y'a des etats d'arrivés pour l'etat et la lettre
-                    nouveaux_etats.append(cible)
-                    a_traiter.append(cible)
-
-
-        nouv_etats_finaux = [m for m in nouveaux_etats if any(f in m for f in self.final)]
+            etat = a_traiter.pop(0)
+            for transi in transitions:
+                if transi[0] == etat and transi[1] == 'e': 
+                    if transi[2] not in fermeture:
+                        fermeture.append(transi[2])
+                        a_traiter.append(transi[2])
         
+        return fermeture
 
-        AFDC = Automate(
-            self.alphabet,
-            nouveaux_etats,
-            [etat_initial],
-            nouv_etats_finaux,
-            nouv_transitions
-        )
 
-        #Enfin, on complète l'automate s'il n'est pas complet
-        if not AFDC.est_complet():
-            AFDC = AFDC.Completion()
+    def Determinisation_et_completion(self):
+        #D'abord on gère les états initiaux
+        transitions_originales = self.transitions.copy()
+
+        new_etat_initial = self.fermeture_epsilon(self.initial, self.transitions)
+        self.initial=new_etat_initial
+
+        etats_a_traiter=[self.etat_to_string(self.initial)]
+        etats_deja_traite=[list(self.initial)]
+        self.etats=list(self.initial)
+        self.transitions=[]
+
+        #Ensuite, on déterminise
+        while etats_a_traiter:
+            etat_present = etats_a_traiter.pop(0) #On prend le 1er element et on le retire de la liste
+            for lettre in self.alphabet: #pour chaque lettre, calcul des etats atteignables
+                destinations=[] #represente les etats d'arrivés pour une lettre
+                for etat in etat_present: #tous les états dans l'état présent (pour couvrir les états composés)
+                    for transi in transitions_originales:
+                        if transi[0]==etat and transi[1]==lettre and transi[2] not in destinations:
+                            destinations.append(transi[2]) #liste d'etats atteignables pour chaque lettre de chaque etat
+
+                destinations = self.fermeture_epsilon(destinations ,transitions_originales)
+
+                if sorted(destinations) not in etats_deja_traite:
+                    etats_deja_traite.append(sorted(destinations))
+                    etats_a_traiter.append(sorted(destinations))
+                self.transitions.append((self.etat_to_string(etat_present), lettre, self.etat_to_string(sorted(destinations))))
         
-        return AFDC
+        #Enfin, on complète l'automate s'il n'est pas deja complet
+        self.Completion()
     
 
 
     def Affichage_AFDC(self):
-        nom = {}
+        nom_etats = {}
+
         for etat in self.etats:
-            if isinstance(etat, tuple):
-                nom[etat] = self._etat_to_str(etat)
+            cle = tuple(etat) if isinstance(etat, list) else etat
+            if isinstance(etat, (list, tuple)):
+                nom_etats[cle] = self.etat_to_string(etat)
             else:
-                nom[etat] = str(etat)
- 
+                nom_etats[cle] = str(etat)
+
         alphabet_sync = [l for l in self.alphabet if l != 'e']
         en_tete = [' ', 'État'] + alphabet_sync
         donnees = []
- 
+
         for etat in self.etats:
-            nom = nom[etat]
+            cle = tuple(etat) if isinstance(etat, list) else etat
+            nom_str = nom_etats[cle]
+
             marqueur = ''
             if etat in self.initial and etat in self.final:
                 marqueur = 'ES'
@@ -266,40 +250,49 @@ class Automate :
                 marqueur = 'E'
             elif etat in self.final:
                 marqueur = 'S'
- 
-            ligne = [marqueur, nom]
+
+            ligne = [marqueur, nom_str]
+
             for lettre in alphabet_sync:
                 dest = [t[2] for t in self.transitions if t[0] == etat and t[1] == lettre]
+
                 if dest:
-                    ligne.append(nom.get(dest[0], str(dest[0])))
+                    noms_dest = []
+                    for d in dest:
+                        cle_d = tuple(d) if isinstance(d, list) else d
+                        noms_dest.append(nom_etats.get(cle_d, str(d)))
+                    ligne.append(",".join(noms_dest))
                 else:
-                    ligne.append('—')
+                    ligne.append('-')
+
             donnees.append(ligne)
- 
+
         colalign = ['center'] * len(en_tete)
         print(tabulate(donnees, en_tete, tablefmt='fancy_grid', colalign=colalign))
- 
-        # Table de correspondance
-        print("\n  Table de correspondance des états :")
-        print("  " + "-"*40)
+
+        print("\nTable de correspondance des états :")
+        print("-" * 40)
+
         for etat in self.etats:
-            nom = nom[etat]
-            if isinstance(etat, tuple):
+            cle = tuple(etat) if isinstance(etat, list) else etat
+            nom_str = nom_etats[cle]
+
+            if isinstance(etat, (list, tuple)):
                 anciens = ', '.join(str(e) for e in etat)
-                print(f"  {nom:10s} ← {{{anciens}}}")
+                print(f"{nom_str:10s} ← {{{anciens}}}")
             else:
-                print(f"  {nom:10s} ← {etat}")
+                print(f"{nom_str:10s} ← {etat}")
 
-    def etat_to_str(self, etat):
-        if not etat:
-            return 'P'
-        if isinstance(etat, str):
-            return etat
-        parts = [str(e) for e in etat]
+        def etat_to_str(self, etat):
+            if not etat:
+                return 'P'
+            if isinstance(etat, str):
+                return etat
+            parts = [str(e) for e in etat]
 
-        if all(len(p) == 1 for p in parts):
-            return ''.join(parts)
-        return '.'.join(parts)
+            if all(len(p) == 1 for p in parts):
+                return ''.join(parts)
+            return '.'.join(parts)
 
 
 
@@ -321,7 +314,7 @@ class Automate :
                             transition[1] == lettre):  # si transi qui concerne état et lettre trouvée
                         # print(etat, lettre, transition)
                         chaine_transi += self.Appartenance_groupe(transition[2],
-                                                             groupes)  # reconstruction de table de transi linéaire
+                                                            groupes)  # reconstruction de table de transi linéaire
                         break
             if chaine_transi in groupes_temp.keys():
                 groupes_temp[chaine_transi].append(etat)
@@ -356,6 +349,25 @@ class Automate :
     from tabulate import tabulate
 
 
+    def Affichage_Minimisation(self, groupes: dict):
+        donnee = []
+        en_tete = [' ', 'etats'] + self.alphabet
+
+        for etat in groupes.values():
+            marqueur = ''
+
+            if etat[0] in self.initial and etat in self.final:
+                marqueur = 'ES'
+            elif etat[0] in self.initial:
+                marqueur = 'E'
+            elif etat[0] in self.final:
+                marqueur = 'S'
+
+            ligne = [marqueur, etat]
+            for lettre in self.alphabet:
+                ligne.append(groupes[self.Appartenance_groupe(etat[0], groupes)])
+            print(ligne)
+            donnee.append(ligne)
     
 
     def lire_mot(self, mot):
@@ -437,8 +449,4 @@ def lecture_automate(chemin):
         etats.append(str(i))
 
     return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
-
-
-
-
 

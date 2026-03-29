@@ -81,7 +81,7 @@ class Automate :
         nouveaux_etats = self.etats + [nouveau_init]
 
         # 4) Copier toutes les transitions existantes
-        nouvelles_transitions = self.transitions
+        nouvelles_transitions = self.transitions.copy()
 
         # 5) Copier les transitions des anciens états initiaux
         for ancien_init in self.initial:

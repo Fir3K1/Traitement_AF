@@ -51,19 +51,19 @@ def main():
                 else:
                     print("L'automate est déjà standard.")
                     
-            elif choix == "5":
+            elif choix == "3":
                 print("\n--- 5. Déterminisation ---")
                 automate = automate.determiniser()
                 print("\n[+] L'automate a été déterminisé avec succès et mis à jour en mémoire.")
                 print(Affichage(automate.alphabet, automate.etats, automate.initial, automate.final, automate.transitions))
 
-            elif choix == "6":
+            elif choix == "4":
                 print("\n--- 6. Minimisation ---")
                 automate = automate.Minimisation()
                 print("\n[+] L'automate a été minimisé avec succès et mis à jour en mémoire.")
                 print(Affichage(automate.alphabet, automate.etats, automate.initial, automate.final, automate.transitions))
                     
-            elif choix == "7":
+            elif choix == "5":
                 print("\n--- 7. Reconnaissance de mots ---")
                 
                 if not automate.est_deterministe():
@@ -83,7 +83,7 @@ def main():
                         else:
                             print(f" ==> Le mot n'est PAS RECONNU par l'automate !")
 
-            elif choix == "8":
+            elif choix == "6":
                 print("\n--- 8. Construire l'Automate Complémentaire ---")
                 
                 if not automate.est_deterministe() or not automate.est_complet():

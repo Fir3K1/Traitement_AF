@@ -142,6 +142,22 @@ class Automate:
         nouveau_init = 'i'
         nouveaux_etats = [nouveau_init] + self.etats
         nouvelles_transitions = list(self.transitions)
+        #gérer états
+        ancien_init = self.initial.copy()  #garde en mémoire anciens états initiaux
+        nouveau_initial = ".".join(sorted(self.initial)) #1.3.4
+        for i in self.initial:
+            self.etats.remove(i) #retire états initiaux des états
+        self.etats.append(nouveau_initial) #ajoute nouvel état init
+        self.initial = nouveau_initial #remplace init dans classe
+
+        #gérer transitions
+        for lettre in self.alphabet:
+            arrivee_nouveau_initial = []
+            for (depart, fleche, arrivee) in self.transitions:
+                if depart in ancien_init and fleche==lettre: #si fait partie de initial (était initial)
+                    arrivee_nouveau_initial.append(arrivee)
+            self.transitions.append((nouveau_initial, lettre, ".".join(sorted(arrivee_nouveau_initial))))
+        return self
 
         for ancien_init in self.initial:
             for (dep, lettre, arr) in self.transitions:
@@ -189,6 +205,7 @@ class Automate:
                         self.final, nouv_transitions)
 
     def determinisation_et_completion(self):
+    def Determinisation_et_completion(self):
         if self.est_deterministe(verbose=False):
             if self.est_complet(verbose=False):
                 print("L'automate est déjà déterministe et complet.")
@@ -303,8 +320,15 @@ class Automate:
             if destination in membres:
                 return cle
         return '∅'   # destination inconnue (état poubelle non nommé)
+    def Appartenance_groupe(self, destination: int, groupes: dict):
+        """renvoie le nom du groupe auquel la destination appartient"""
+        for cle in groupes.keys():
+            if destination in groupes[cle]: return cle
 
     def Diviseur_Etat(self, etats, groupes):
+    def Diviseur_Etat(self, etats: list[str], groupes: dict):
+        '''Diviser etats en groupes quand les transitions sont les mêmes
+        Retourne un dictionnaire (groupes)'''
         groupes_temp = {}
         alphabet_sync = [l for l in self.alphabet if l != 'e']
         for etat in etats:
@@ -314,14 +338,26 @@ class Automate:
                 for (dep, l, arr) in self.transitions:
                     if dep == etat and l == lettre:
                         dest = arr
+            chaine_transi = ""  # chaque destination (groupe) pour chaque lettre dans l'ordre
+            for lettre in self.alphabet:
+                for transition in self.transitions:
+                    if (transition[0] == etat) and (
+                            transition[1] == lettre):  # si transi qui concerne état et lettre trouvée
+                        # print(etat, lettre, transition)
+                        chaine_transi += self.Appartenance_groupe(transition[2],
+                                                            groupes)  # reconstruction de table de transi linéaire
                         break
                 chaine += str(self.Appartenance_groupe(dest, groupes)
                               if dest is not None else '∅')
             if chaine in groupes_temp:
                 groupes_temp[chaine].append(etat)
+            if chaine_transi in groupes_temp.keys():
+                groupes_temp[chaine_transi].append(etat)
             else:
                 groupes_temp[chaine] = [etat]
         return groupes_temp
+                groupes_temp[chaine_transi] = [etat]
+        return groupes_temp  # {'01': ['0', '1'], '23': ['2'], '12': ['3']} clés sont les chemins pour chaque lettre, valeurs
 
     def Fusion_dicos(self, dico1, dico2):
         res = {}
@@ -336,6 +372,7 @@ class Automate:
 
     def Minimisation(self):
         terminaux = list(self.final)
+        terminaux = self.final.copy()
         non_terminaux = [x for x in self.etats if x not in terminaux]
 
         # Partition initiale P0 : on ignore les groupes vides
@@ -363,6 +400,14 @@ class Automate:
                 break
             groupes_temp = groupes_next
 
+        groupes_temp = {"I0": terminaux, "I1": non_terminaux}
+        groupes_next = self.Fusion_dicos(self.Diviseur_Etat(groupes_temp['I0'], groupes_temp),
+                                         self.Diviseur_Etat(groupes_temp['I1'], groupes_temp))
+        while groupes_temp != groupes_next:
+            groupes_temp = groupes_next.copy()
+            groupes_next = dict()
+            for cle in groupes_temp.keys():
+                groupes_next = self.Fusion_dicos(groupes_next, self.Diviseur_Etat(groupes_temp[cle], groupes_temp))
         return groupes_next
 
     def Affichage_Minimisation(self):
@@ -409,14 +454,30 @@ class Automate:
 
         print("\nAutomate minimal (AFDCM) :")
         print(AFDCM.Affichage())
+    def Affichage_Minimisation(self, groupes: dict):
+        donnee = []
+        en_tete = [' ', 'etats'] + self.alphabet
 
         print("\nTable de correspondance AFDCM ← AFDC :")
         print("  " + "-" * 40)
         for cle, membres in groupes.items():
             print(f"{cle:6s}  ←  {{{', '.join(str(m) for m in membres)}}}")
+        for etat in groupes.values():
+            marqueur = ''
 
         return AFDCM
+            if etat[0] in self.initial and etat in self.final:
+                marqueur = 'ES'
+            elif etat[0] in self.initial:
+                marqueur = 'E'
+            elif etat[0] in self.final:
+                marqueur = 'S'
 
+            ligne = [marqueur, etat]
+            for lettre in self.alphabet:
+                ligne.append(groupes[self.Appartenance_groupe(etat[0], groupes)])
+            print(ligne)
+            donnee.append(ligne)
 
     def lire_mot(self, mot):
         etat_courant = self.initial[0]
@@ -480,4 +541,6 @@ def lecture_automate(chemin):
 
     etats = [str(i) for i in range(nb_etats)]
 
-    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
+    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
+
+

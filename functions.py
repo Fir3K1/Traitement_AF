@@ -136,12 +136,6 @@ class Automate:
         return True
 
     def standardiser(self):
-        if self.est_standard(verbose=False):
-            return self
-
-        nouveau_init = 'i'
-        nouveaux_etats = [nouveau_init] + self.etats
-        nouvelles_transitions = list(self.transitions)
         #gérer états
         ancien_init = self.initial.copy()  #garde en mémoire anciens états initiaux
         nouveau_initial = ".".join(sorted(self.initial)) #1.3.4
@@ -159,20 +153,6 @@ class Automate:
             self.transitions.append((nouveau_initial, lettre, ".".join(sorted(arrivee_nouveau_initial))))
         return self
 
-        for ancien_init in self.initial:
-            for (dep, lettre, arr) in self.transitions:
-                if dep == ancien_init:
-                    t = (nouveau_init, lettre, arr)
-                    if t not in nouvelles_transitions:
-                        nouvelles_transitions.append(t)
-
-        nouveaux_finaux = list(self.final)
-        if any(e in self.final for e in self.initial):
-            if nouveau_init not in nouveaux_finaux:
-                nouveaux_finaux.append(nouveau_init)
-
-        return Automate(self.alphabet, nouveaux_etats,
-                        [nouveau_init], nouveaux_finaux, nouvelles_transitions)
  #
     def Completion(self):
         """
@@ -204,7 +184,6 @@ class Automate:
         return Automate(self.alphabet, nouv_etats, self.initial,
                         self.final, nouv_transitions)
 
-    def determinisation_et_completion(self):
     def Determinisation_et_completion(self):
         if self.est_deterministe(verbose=False):
             if self.est_complet(verbose=False):
@@ -315,29 +294,16 @@ class Automate:
             else:
                 print(f"{nom_str:12s} ← {etat}")
 
-    def Appartenance_groupe(self, destination, groupes):
-        for cle, membres in groupes.items():
-            if destination in membres:
-                return cle
-        return '∅'   # destination inconnue (état poubelle non nommé)
     def Appartenance_groupe(self, destination: int, groupes: dict):
         """renvoie le nom du groupe auquel la destination appartient"""
         for cle in groupes.keys():
             if destination in groupes[cle]: return cle
 
-    def Diviseur_Etat(self, etats, groupes):
     def Diviseur_Etat(self, etats: list[str], groupes: dict):
         '''Diviser etats en groupes quand les transitions sont les mêmes
         Retourne un dictionnaire (groupes)'''
         groupes_temp = {}
-        alphabet_sync = [l for l in self.alphabet if l != 'e']
         for etat in etats:
-            chaine = ''
-            for lettre in alphabet_sync:
-                dest = None
-                for (dep, l, arr) in self.transitions:
-                    if dep == etat and l == lettre:
-                        dest = arr
             chaine_transi = ""  # chaque destination (groupe) pour chaque lettre dans l'ordre
             for lettre in self.alphabet:
                 for transition in self.transitions:
@@ -347,15 +313,9 @@ class Automate:
                         chaine_transi += self.Appartenance_groupe(transition[2],
                                                             groupes)  # reconstruction de table de transi linéaire
                         break
-                chaine += str(self.Appartenance_groupe(dest, groupes)
-                              if dest is not None else '∅')
-            if chaine in groupes_temp:
-                groupes_temp[chaine].append(etat)
             if chaine_transi in groupes_temp.keys():
                 groupes_temp[chaine_transi].append(etat)
             else:
-                groupes_temp[chaine] = [etat]
-        return groupes_temp
                 groupes_temp[chaine_transi] = [etat]
         return groupes_temp  # {'01': ['0', '1'], '23': ['2'], '12': ['3']} clés sont les chemins pour chaque lettre, valeurs
 
@@ -371,35 +331,8 @@ class Automate:
         return res
 
     def Minimisation(self):
-        terminaux = list(self.final)
         terminaux = self.final.copy()
         non_terminaux = [x for x in self.etats if x not in terminaux]
-
-        # Partition initiale P0 : on ignore les groupes vides
-        groupes_temp = {}
-        if terminaux:
-            groupes_temp['I0'] = terminaux
-        if non_terminaux:
-            groupes_temp[f'I{len(groupes_temp)}'] = non_terminaux
-
-        iteration = 0
-        print(f"\nP{iteration} : {groupes_temp}")
-
-        while True:
-            groupes_next = {}
-            for cle, membres in groupes_temp.items():
-                sous = self.Diviseur_Etat(membres, groupes_temp)
-                groupes_next = self.Fusion_dicos(groupes_next, sous)
-
-            iteration += 1
-            print(f"P{iteration} : {groupes_next}")
-
-            # Convergence si les listes de groupes sont identiques (à renommage près)
-            if (sorted(str(v) for v in groupes_temp.values()) ==
-                    sorted(str(v) for v in groupes_next.values())):
-                break
-            groupes_temp = groupes_next
-
         groupes_temp = {"I0": terminaux, "I1": non_terminaux}
         groupes_next = self.Fusion_dicos(self.Diviseur_Etat(groupes_temp['I0'], groupes_temp),
                                          self.Diviseur_Etat(groupes_temp['I1'], groupes_temp))
@@ -410,62 +343,13 @@ class Automate:
                 groupes_next = self.Fusion_dicos(groupes_next, self.Diviseur_Etat(groupes_temp[cle], groupes_temp))
         return groupes_next
 
-    def Affichage_Minimisation(self):
-        print("\n--- Calcul des partitions de minimisation ---")
-        groupes = self.Minimisation()
-
-        if len(groupes) == len(self.etats):
-            print("\n  L'automate est déjà minimal (aucun état fusionné).")
-        else:
-            print(f"\n  {len(self.etats)} états → {len(groupes)} états après minimisation.")
-
-        # Représentant de chaque groupe (premier élément)
-        repr_groupe = {cle: membres[0] for cle, membres in groupes.items()}
-
-        def groupe_de(etat):
-            for cle, membres in groupes.items():
-                if etat in membres:
-                    return cle
-            return None
-
-        nouveaux_etats = list(groupes.keys())
-        nouv_initial = [groupe_de(self.initial[0])]
-        nouv_final = [cle for cle, membres in groupes.items()
-                             if any(m in self.final for m in membres)]
-        nouv_transitions = []
-        alphabet_sync = [l for l in self.alphabet if l != 'e']
-
-        for cle, membres in groupes.items():
-            rep = repr_groupe[cle]
-            for lettre in alphabet_sync:
-                dest = None
-                for (dep, l, arr) in self.transitions:
-                    if dep == rep and l == lettre:
-                        dest = arr
-                        break
-                if dest is not None:
-                    dest_groupe = groupe_de(dest)
-                    t = (cle, lettre, dest_groupe)
-                    if t not in nouv_transitions:
-                        nouv_transitions.append(t)
-
-        AFDCM = Automate(self.alphabet, nouveaux_etats,
-                         nouv_initial, nouv_final, nouv_transitions)
-
-        print("\nAutomate minimal (AFDCM) :")
-        print(AFDCM.Affichage())
     def Affichage_Minimisation(self, groupes: dict):
         donnee = []
         en_tete = [' ', 'etats'] + self.alphabet
 
-        print("\nTable de correspondance AFDCM ← AFDC :")
-        print("  " + "-" * 40)
-        for cle, membres in groupes.items():
-            print(f"{cle:6s}  ←  {{{', '.join(str(m) for m in membres)}}}")
         for etat in groupes.values():
             marqueur = ''
 
-        return AFDCM
             if etat[0] in self.initial and etat in self.final:
                 marqueur = 'ES'
             elif etat[0] in self.initial:
@@ -541,6 +425,6 @@ def lecture_automate(chemin):
 
     etats = [str(i) for i in range(nb_etats)]
 
-    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
+    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
 
 

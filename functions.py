@@ -1,5 +1,3 @@
-from tabulate import tabulate
-
 class Automate :
 
     def __init__(self, alphabet, etats, initial, final, transitions):
@@ -251,38 +249,24 @@ def lecture_automate(chemin):
 
 
 def Affichage(alphabet, etats, etats_initiaux, etats_finaux, transitions):
-    donnee = []
-    en_tete =[' ', ' '] + alphabet
-
+    print("\nTable de transition :")
+    header = "Etats | " + " | ".join(alphabet)
+    print(header)
+    print("-" * len(header))
+    
     for etat in etats:
-        ligne = []
-
-        if etat in etats_initiaux and etat in etats_finaux:
-            ligne.append('ES')
-        elif etat in etats_initiaux:
-            ligne.append('E')
-        elif etat in etats_finaux:
-            ligne.append('S')
-        else :
-            ligne.append(' ')
-
-        ligne.append(etat)
-
+        prefix = ""
+        if etat in etats_initiaux: prefix += "E"
+        if etat in etats_finaux: prefix += "S"
+        
+        ligne = f"{prefix:<2} {etat:<2} | "
+        transitions_etat = []
         for lettre in alphabet:
-            arrivee = []
-            for elt in transitions:
-                if elt[0] == etat and elt[1] == lettre:
-                    arrivee.append(elt[2])
-
-            ligne.append(','.join(arrivee))
-
-        donnee.append(ligne)
-
-    colonne = ["center"]*(2 + len(alphabet))
-
-
-
-    return tabulate(donnee, en_tete, tablefmt="fancy_grid", colalign=colonne)
+            destinations = [t[2] for t in transitions if t[0] == etat and t[1] == lettre]
+            transitions_etat.append(",".join(destinations) if destinations else "-")
+        
+        print(ligne + " | ".join(transitions_etat))
+    return ""
 
 
 

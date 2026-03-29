@@ -58,8 +58,6 @@ class Automate:
     def Affichage(self):
         """Retourne une table de transitions formatée (str)."""
         alphabet_affiche = [l for l in self.alphabet if l != 'e']
-        if 'e' in self.alphabet:
-            alphabet_affiche.append('ε')
 
         donnee = []
         en_tete = [' ', 'etats'] + alphabet_affiche
@@ -75,11 +73,11 @@ class Automate:
                 marqueur = ''
 
             ligne = [marqueur, str(etat)]
-            for lettre in self.alphabet:
-                lettre_cle = 'e' if lettre == 'ε' else lettre
+            for lettre in alphabet_affiche:
                 arrivees = [str(t[2]) for t in self.transitions
-                              if t[0] == etat and t[1] == lettre_cle]
-                ligne.append(','.join(arrivees) if arrivees else '-')
+                              if t[0] == etat and t[1] == lettre]
+                arrivees = sorted(arrivees)
+                ligne.append('.'.join(arrivees) if arrivees else '-')
 
             donnee.append(ligne)
 
@@ -87,53 +85,54 @@ class Automate:
         return tabulate(donnee, en_tete, tablefmt='fancy_grid', colalign=colonne)
 
 
-    def est_standard(self, verbose=True):
+    def est_standard(self):
         if len(self.initial) != 1:
-            if verbose:
-                print(f"  Non standard : {len(self.initial)} état(s) initial/initiaux.")
+            print(f"Non standard : {len(self.initial)} état(s) initial/initiaux.")
             return False
+        
         i = self.initial[0]
+        cpt = 0
         for (dep, lettre, arr) in self.transitions:
             if arr == i:
-                if verbose:
-                    print(f"Non standard : transition vers l'état initial "f"depuis '{dep}' avec '{lettre}'.")
-                return False
-        if verbose:
-            print("L'automate est standard.")
+                print(f"Non standard : transition vers l'état initial "f"depuis '{dep}' avec '{lettre}'.")
+                cpt += 1
+        if cpt != 0:
+            return False
+        
+        print("L'automate est standard.")
         return True
 
-    def est_deterministe(self, verbose=True):
+    def est_deterministe(self):
         if len(self.initial) != 1:
-            if verbose:
-                print(f"Non déterministe : {len(self.initial)} état(s) initial/initiaux.")
+            print(f"Non déterministe : {len(self.initial)} état(s) initial/initiaux.")
             return False
+        
         if 'e' in self.alphabet:
-            if verbose:
-                print("Non déterministe : présence de ε-transitions (automate asynchrone).")
+            print("Non déterministe : présence de ε-transitions (automate asynchrone).")
             return False
+        
         vus = {}
         for (dep, lettre, arr) in self.transitions:
             cle = (dep, lettre)
             if cle in vus:
-                if verbose:
-                    print(f"Non déterministe : plusieurs transitions depuis "
-                          f"'{dep}' par '{lettre}'.")
+                print(f"Non déterministe : plusieurs transitions depuis "f"'{dep}' par '{lettre}'.")
                 return False
             vus[cle] = True
-        if verbose:
-            print("L'automate est déterministe.")
+        print("L'automate est déterministe.")
         return True
 
     def est_complet(self, verbose=True):
         alphabet_sync = [l for l in self.alphabet if l != 'e']
+        cpt = 0
         for e in self.etats:
             for l in alphabet_sync:
                 if not any(t[0] == e and t[1] == l for t in self.transitions):
-                    if verbose:
-                        print(f"Non complet : pas de transition depuis '{e}' avec '{l}'.")
-                    return False
-        if verbose:
-            print("L'automate est complet.")
+                    print(f"Non complet : pas de transition depuis '{e}' avec '{l}'.")
+                    cpt += 1
+        if cpt != 0:
+            return False
+
+        print("L'automate est complet.")
         return True
 
     def standardiser(self):
@@ -164,11 +163,12 @@ class Automate:
         Retourne un automate déterministe complet en ajoutant un état
         poubelle 'P' si des transitions manquent.
         """
-        if self.est_complet(verbose=False):
+        if self.est_complet():
             return self
 
         poubelle = 'P'
         nouv_etats = list(self.etats)
+        print(nouv_etats)
         nouv_transitions = list(self.transitions)
         poubelle_ajoutee = False
         alphabet_sync = [l for l in self.alphabet if l != 'e']
@@ -476,7 +476,7 @@ def lecture_automate(chemin):
     # On ajoute 'e' seulement si des ε-transitions existent dans le fichier
     lettres = [chr(ord('a') + i) for i in range(nb_symboles)]
     if any(t[1] == 'e' for t in transitions) and 'e' not in lettres:
-        lettres.append('e')
+        lettres[len(lettres)-1] = ('e')
 
     etats = [str(i) for i in range(nb_etats)]
 

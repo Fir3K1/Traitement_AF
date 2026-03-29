@@ -2,7 +2,7 @@ from functions import *
 
 
 def afficher_menu():
-    print("MENU PRINCIPAL\n\n")
+    print("\n\nMENU PRINCIPAL\n\n")
     print("  1. Afficher l'automate courant")
     print("  2. Tests (standard / deterministe / complet)")
     print("  3. Standardiser")
@@ -11,8 +11,8 @@ def afficher_menu():
     print("  6. Reconnaitre des mots")
     print("  7. Automate complementaire")
     print("  8. Changer d'automate")
-    print("  0. Quitter")
-    print("=" * 45)
+    print("  0. Quitter\n")
+
 
 
 def charger_automate():
@@ -106,7 +106,9 @@ def main():
 
             elif choix == 4:
                 print("\n--- Determinisation et completion ---")
-                resultat = af.Determinisation_et_completion()
+                #resultat = af.Determinisation_et_completion()
+                resultat = af.Completion()
+                #resultat.Affichage()
                 if resultat is None:
                     print("  Erreur : la determinisation a echoue.")
                 else:

@@ -7,7 +7,7 @@ def main():
         print("\n" + "="*40)
         print("          MENU PRINCIPAL")
         print("="*40)
-        print("1. Charger un autre automate (ou lancer pour la 1ère fois)")
+        print("1. Charger un automate")
         print("2. Standardisation")
         print("3. Déterminisation")
         print("4. Minimisation")
@@ -15,19 +15,26 @@ def main():
         print("6. Créer l'automate complémentaire")
         print("0. Quitter le programme")
         
-        choix = input("\nChoisissez une option : ")
+        while True:
+            try:
+                choix = int(input("\nChoisissez une option : "))
+                if 0 <= choix <= 6:
+                    break
+                print("Valeur incorrecte. Veuillez saisir un nombre entre 0 et 6.")
+            except ValueError:
+                print("Valeur incorrecte. Veuillez entrer un entier.")
 
-        if choix == "0":
+        if choix == 0:
             print("Fin du programme. Au revoir !")
             break
             
-        elif choix == "1" or automate is None:
-            if automate is None and choix != "1":
-                print("-> Veuillez d'abord charger un automate (Option 1).")
+        elif choix == 1 or automate is None:
+            if automate is None and choix != 1:
+                print("--> Veuillez d'abord charger un automate.")
             
             while True:
                 try:
-                    num_AF = int(input("\nSaisissez le numéro de l'automate (1 à 44) : "))
+                    num_AF = int(input("\nSaisissez le numéro de l'automate à charger (1 à 44) : "))
                     if 1 <= num_AF <= 44:
                         break
                     print("Valeur incorrecte. Veuillez taper un nombre entre 1 et 44.")
@@ -36,34 +43,34 @@ def main():
             
             chemin = f"AF/AF{num_AF}.txt"
             automate = lecture_automate(chemin)
-            print(f"\n[+] Automate n°{num_AF} chargé avec succès !")
-            print(Affichage(automate.alphabet, automate.etats, automate.initial, automate.final, automate.transitions))
+            print(f"\nAutomate n°{num_AF} chargé avec succès !")
+            print(automate.Affichage())
 
         elif automate is not None:
-            if choix == "2":
+            if choix == 2:
                 print("\n--- 2. Standardisation ---")
                 if not automate.est_standard():
                     choix_std = input("Voulez-vous standardiser cet automate ? (o/n) : ")
                     if choix_std.lower() == 'o':
                         automate = automate.standardiser()
                         print("\nAutomate standardisé :")
-                        print(Affichage(automate.alphabet, automate.etats, automate.initial, automate.final, automate.transitions))
+                        print(automate.Affichage())
                 else:
                     print("L'automate est déjà standard.")
                     
-            elif choix == "3":
+            elif choix == 3:
                 print("\n--- 5. Déterminisation ---")
-                automate = automate.determiniser()
+                automate = automate.Determinisation_et_completion()
                 print("\n[+] L'automate a été déterminisé avec succès et mis à jour en mémoire.")
-                print(Affichage(automate.alphabet, automate.etats, automate.initial, automate.final, automate.transitions))
+                print(automate.Affichage())
 
-            elif choix == "4":
+            elif choix == 4:
                 print("\n--- 6. Minimisation ---")
                 automate = automate.Minimisation()
                 print("\n[+] L'automate a été minimisé avec succès et mis à jour en mémoire.")
-                print(Affichage(automate.alphabet, automate.etats, automate.initial, automate.final, automate.transitions))
+                print(automate.Affichage())
                     
-            elif choix == "5":
+            elif choix == 5:
                 print("\n--- 7. Reconnaissance de mots ---")
                 
                 if not automate.est_deterministe():
@@ -83,7 +90,7 @@ def main():
                         else:
                             print(f" ==> Le mot n'est PAS RECONNU par l'automate !")
 
-            elif choix == "6":
+            elif choix == 6:
                 print("\n--- 8. Construire l'Automate Complémentaire ---")
                 
                 if not automate.est_deterministe() or not automate.est_complet():
@@ -94,7 +101,7 @@ def main():
                     
                     if automate_complementaire:
                         print("\n[+] Automate complémentaire généré avec succès !")
-                        print(Affichage(automate_complementaire.alphabet, 
+                        print(automate.Affichage(automate_complementaire.alphabet, 
                                         automate_complementaire.etats, 
                                         automate_complementaire.initial, 
                                         automate_complementaire.final, 

@@ -1,9 +1,9 @@
-import tabulate
+from tabulate import *
 
 class Automate :
 
     def __init__(self, alphabet, etats, initial, final, transitions):
-        self.alphabet = alphabet    #['a', 'b']
+        self.alphabet = sorted(alphabet)    #['a', 'b']
         self.etats = etats  #['0', '1', '2', '3', '4']
         self.initial = initial  #['1', '3']
         self.final = final  #['2', '4']
@@ -18,21 +18,107 @@ class Automate :
             f"Transitions : {self.transitions}\n"
         )
 
-    def est_deterministe(self):
+    def Affichage(self):
+        alphabet_affiche = [l for l in self.alphabet if l != 'e']
+        if 'e' in self.alphabet:
+            alphabet_affiche.append('ε')
+
+        donnee = []
+        en_tete =[' ', 'etats'] + alphabet_affiche
+
+        for etat in self.etats:
+            marqueur = ''
+
+            if etat in self.initial and etat in self.final:
+                marqueur = 'ES'
+            elif etat in self.initial:
+                marqueur = 'E'
+            elif etat in self.final:
+                marqueur = 'S'
+
+            ligne = [marqueur, etat]
+            for lettre in self.alphabet:
+                lettre_cle = 'e' if lettre == 'ε' else lettre
+                arrivees = [t[2] for t in self.transitions if t[0] == etat and t[1] == lettre_cle]
+                ligne.append(','.join(arrivees) if arrivees else '-')
+
+            donnee.append(ligne)
+
+        colonne = ["center"] * len(en_tete)
+        return tabulate(donnee, en_tete, tablefmt="fancy_grid", colalign=colonne)
+
+
+    def fermeture_epsilon(self, etats, transitions=None):
+        if transitions is None:
+            transitions = self.transitions
+        #etats est une liste d'états
+        #la fonction retourne tous les états atteignables par epsilon depuis ces états
+        fermeture = list(etats)  #on part des états donnés
+        a_traiter = list(etats)
+        
+        while a_traiter:
+            etat = a_traiter.pop(0)
+            for (dep, lettre, arr) in transitions:
+                if (dep == etat) and (lettre == 'e') and arr not in fermeture:  #e pour epsilon
+                    fermeture.append(arr)
+                    a_traiter.append(arr)
+        
+        return fermeture
+    
+
+    def est_standard(self):
         # 1 seul état initial
-        if len(self.initial)!=1:
-            print("Non déterministe : on retrouve plusieurs états initiaux !")
+        if len(self.initial) != 1:
+            print("Non standard : plusieurs états initiaux.")
             return False
-        transition_vues=set()
-        for transition in self.transitions:
-            e = transition[0]  # état de départ
-            l = transition[1]  # symbole
-            f = transition[2]  # état d’arrivée
-            if (e,l) in transition_vues:
-                print(f"Non déterministe : plusieurs transitions depuis {e} avec le même symbole {l} !")
+
+        i = self.initial[0]
+
+        # Aucune transition ne doit arriver vers l'état initial
+        for (dep, lettre, arr) in self.transitions:
+
+            if arr == i:
+                print(f"Non standard : transition vers l’état initial depuis {dep} avec le symbole {lettre}")
                 return False
-            transition_vues.add((e,l))
+
+        print("L'automate est standard.")
         return True
+
+
+    def standardiser(self):
+        # 1) Si l'automate est déjà standard, on ne fait rien
+        if self.est_standard():
+            print("Déjà standard")
+            return self
+
+        # 2) Créer un nouvel état initial
+        nouveau_init = "i"
+
+        # 3) Ajouter ce nouvel état aux états existants
+        nouveaux_etats = [nouveau_init] + self.etats
+
+        # 4) Copier toutes les transitions existantes
+        nouvelles_transitions = list(self.transitions)
+
+        # 5) Copier les transitions des anciens états initiaux
+        for ancien_init in self.initial:
+            for (dep, lettre, arr) in self.transitions:
+                
+                # Si une transition part d'un ancien état initial, on la duplique en partant du nouvel état initial
+                if dep == ancien_init:
+                    t = (nouveau_init, lettre, arr)
+                    if t not in nouvelles_transitions:
+                        nouvelles_transitions.append(t)
+
+        # 6) Construire et renvoyer le nouvel automate standardisé
+        return Automate(
+            self.alphabet,
+            nouveaux_etats,
+            [nouveau_init],  # le nouvel état initial
+            self.final,
+            nouvelles_transitions
+        )
+
 
     def est_complet(self):
         for e in self.etats:
@@ -49,175 +135,171 @@ class Automate :
                     print(f"Non complet : pas de transition de {e} avec le symbole {l} !")
                     return False
         return True #on peut retourner trouve aussi, mais pour être rigoureux, on retourne True.
-
-    def est_standard(self):
-        # 1 seul état initial
-        if len(self.initial) != 1:
-            print("Non standard : plusieurs états initiaux !")
-            return False
-
-        i = self.initial[0]
-
-        # Aucune transition ne doit arriver vers l'état initial
-        for transition in self.transitions:
-            dep = transition[0]
-            lettre = transition[1]
-            arr = transition[2]
-
-            if arr == i:
-                print(f"Non standard : transition vers l’état initial depuis {dep} avec le symbole {lettre}")
-                return False
-
-        return True
-
-    def standardiser(self):
-        # 1) Si l'automate est déjà standard, on ne fait rien
-        if self.est_standard():
-            print("Déjà standard")
-            return self
-
-        # 2) Créer un nouvel état initial
-        nouveau_init = "i"
-
-        # 3) Ajouter ce nouvel état aux états existants
-        nouveaux_etats = self.etats + [nouveau_init]
-
-        # 4) Copier toutes les transitions existantes
-        nouvelles_transitions = self.transitions.copy()
-
-        # 5) Copier les transitions des anciens états initiaux
-        for ancien_init in self.initial:
-            for transition in self.transitions:
-                dep = transition[0]
-                lettre = transition[1]
-                arr = transition[2]
-
-                # Si une transition part d'un ancien état initial, on la duplique en partant du nouvel état initial
-                if dep == ancien_init:
-                    nouvelles_transitions.append((nouveau_init, lettre, arr))
-
-        # 6) Construire et renvoyer le nouvel automate standardisé
-        return Automate(
-            self.alphabet,
-            nouveaux_etats,
-            [nouveau_init],  # le nouvel état initial
-            self.final,
-            nouvelles_transitions
-        )
+    
 
     def Completion(self):
-    #on définir la poubelle
-        p=len(self.etats)
+        if self.est_complet():
+            return self
+        
+        poubelle = 'P'
+        nouv_etats = list(self.etats)
+        nouv_transitions = list(self.transitions)
+        poubelle_ajoutee = False
+
         #on parcours tous les etats et leurs transitions pour detecter si une transition manque
         for etat in self.etats:
             for lettre in self.alphabet:
-                trouve=False
-                for transi in self.transitions:
-                    if transi[0]==etat and transi[1]==lettre:
-                        trouve=True
-                if trouve==False:
-                    new_transi=(etat,lettre,p)
-                    self.transitions.append(new_transi) #on redirige les transitions manquantes vers cet état poubelle
+                if not any(t[0] == etat and t[1] == lettre for t in nouv_transitions):
+                    if not poubelle_ajoutee:
+                        for l in self.alphabet:
+                            nouv_transitions.append((poubelle, l, poubelle))
+                        poubelle_ajoutee = True
+                    nouv_transitions.append((etat, lettre, poubelle))
 
-        self.etats.append(p)
-        #on ajoute l'etat poubelle p à la liste d'états
-        for lettre in self.alphabet:
-            new_transi=(p, lettre,p )   
-            self.transitions.append(new_transi) 
-            #l'état poubelle a ses propres transitions vers lui meme pour chaque lettre
+        return Automate(
+            self.alphabet,
+            nouv_etats,
+            self.initial,
+            self.final,
+            nouv_transitions
+        )
+    
 
-    def fermeture_epsilon(self, etats, transitions):
-        #etats est une liste d'états
-        #la fonction retourne tous les états atteignables par epsilon depuis ces états
-        fermeture = list(etats)  #on part des états donnés
-        a_traiter = list(etats)
+    def est_deterministe(self):
+        # 1 seul état initial
+        if len(self.initial) != 1:
+            print(f"Non déterministe : {len(self.initial)} état(s) initial/initiaux.")
+            return False
         
-        while a_traiter:
-            etat = a_traiter.pop(0)
-            for transi in transitions:
-                if transi[0] == etat and transi[1] == 'e':  #e pour epsilon
-                    if transi[2] not in fermeture:
-                        fermeture.append(transi[2])
-                        a_traiter.append(transi[2])
+        if 'e' in self.alphabet:
+            print("Non déterministe : l'automate est asynchrone (ε-transitions).")
+            return False
+
+        vus = {}
+        for (dep, lettre, arr) in self.transitions:
+            cle = (dep, lettre)
+            if cle in vus:
+                print(f"Non déterministe : plusieurs transitions depuis '{dep}' par '{lettre}'. ")
+                return False
+            vus[cle] = True
         
-        return fermeture
+        print("L'automate est déterministe.")
+        return True
 
 
     def Determinisation_et_completion(self):
 
-        #D'abord on gère les états initiaux
-        transitions_originales = self.transitions.copy()
+        if self.est_deterministe():
+            if self.est_complet():
+                print("L'automate est déjà déterministe et complet.")
+                return self
+            else :
+                print("L'automate est déterministe mauis incomplet. Complétion : ")
+                return self.Completion()
 
-        new_etat_initial = self.fermeture_epsilon(self.initial)
-        self.initial=new_etat_initial
+        alphabet_sync = [l for l in self.alphabet if l != 'e']
 
-        etats_a_traiter=[self.initial]
-        self.etats=[self.initial]
-
-        self.transitions=[]
+        etat_initial = tuple(sorted(self.fermeture_epsilon(self.initial), key=str))
+        a_traiter = [etat_initial]
+        nouveaux_etats = [etat_initial]
+        nouv_transitions = []
 
         #Ensuite, on déterminise 
-        while etats_a_traiter:
-            etat=etats_a_traiter.pop(0) #On prend le 1er element et on le retire de la liste
-            for lettre in self.alphabet: #pour chaque lettre, calcul des etats atteignables
-                fleche=[] #represente les etats d'arrivés pour une lettre
-                for transi in transitions_originales:
-                    if transi[0]==etat and transi[1]==lettre:
-                        fleche.append(transi[2]) #liste d'etats atteignables pour chaque lettre de chaque etat
-                fleche=self.fermeture_epsilon(fleche, transitions_originales)
-                if fleche: #s'il y'a des etats d'arrivés pour l'etat et la lettre
-                    if fleche not in self.etats:
-                        self.etats.append(fleche)
-                        etats_a_traiter.append(fleche)
-                    self.transitions.append((etat,lettre,fleche))
-                    #on cree les nouveaux etats avec leurs transitions
+        while a_traiter:
+            etat = a_traiter.pop(0) #On prend le 1er element et on le retire de la liste
+
+            for lettre in alphabet_sync: #pour chaque lettre, calcul des etats atteignables
+                cible = [] #represente les etats d'arrivés pour une lettre 
+
+                for sous_etat in etat:
+                    for (dep, l, arr) in self.transitions:
+                        if (dep == sous_etat) and (l == lettre) and (arr not in cible):
+                            cible.append(arr) #liste d'etats atteignables pour chaque lettre de chaque etat
+
+                cible = self.fermeture_epsilon(cible)
+                cible = tuple(sorted(cible, key=str))
+
+                nouv_transitions.append((etat, lettre, cible))
+
+                if cible not in nouveaux_etats: #s'il y'a des etats d'arrivés pour l'etat et la lettre
+                    nouveaux_etats.append(cible)
+                    a_traiter.append(cible)
+
+
+        nouv_etats_finaux = [m for m in nouveaux_etats if any(f in m for f in self.final)]
         
+
+        AFDC = Automate(
+            self.alphabet,
+            nouveaux_etats,
+            [etat_initial],
+            nouv_etats_finaux,
+            nouv_transitions
+        )
 
         #Enfin, on complète l'automate s'il n'est pas complet
-        if self.est_complet==False:
-            self.Completion()
+        if not AFDC.est_complet():
+            AFDC = AFDC.Completion()
+        
+        return AFDC
     
-    def etat_to_string(etat):
-        #si tous les numéros sont <= 9, pas besoin de séparateur
-        if all(e <= 9 for e in etat):
-            return "".join(str(e) for e in etat)
-        else: #sinon, on a besoin de séparateurs. Par ex {12,3} different de {1,2,3}
-            return ".".join(str(e) for e in etat)
 
-    def Affichage_AFDC(alphabet, etats, etats_initiaux, etats_finaux, transitions):
-    #On l'affiche comme l'affichage classique + etats_listes en chaines lisibles + table correspondance anciens-nouveaux etats
-        print("\nTable de transition de l'automate déterministe complet :")
-        header = "Etats | " + " | ".join(alphabet)
-        print(header)
-        print("-" * len(header))
-        
-        for etat in etats:
-            prefix = ""
-            if etat in etats_initiaux: prefix += "E"
-            if etat in etats_finaux: prefix += "S"
-            
-            etat_str = etat_to_string(etat)
-            ligne = f"{prefix:<2} {etat_str:<6} | "
-            
-            transitions_etat = []
-            for lettre in alphabet:
-                destinations = [etat_to_string(t[2]) for t in transitions if t[0] == etat and t[1] == lettre]
-                transitions_etat.append(",".join(destinations) if destinations else "-")
-            
-            print(ligne + " | ".join(transitions_etat))
 
+    def Affichage_AFDC(self):
+        nom = {}
+        for etat in self.etats:
+            if isinstance(etat, tuple):
+                nom[etat] = self._etat_to_str(etat)
+            else:
+                nom[etat] = str(etat)
+ 
+        alphabet_sync = [l for l in self.alphabet if l != 'e']
+        en_tete = [' ', 'État'] + alphabet_sync
+        donnees = []
+ 
+        for etat in self.etats:
+            nom = nom[etat]
+            marqueur = ''
+            if etat in self.initial and etat in self.final:
+                marqueur = 'ES'
+            elif etat in self.initial:
+                marqueur = 'E'
+            elif etat in self.final:
+                marqueur = 'S'
+ 
+            ligne = [marqueur, nom]
+            for lettre in alphabet_sync:
+                dest = [t[2] for t in self.transitions if t[0] == etat and t[1] == lettre]
+                if dest:
+                    ligne.append(nom.get(dest[0], str(dest[0])))
+                else:
+                    ligne.append('—')
+            donnees.append(ligne)
+ 
+        colalign = ['center'] * len(en_tete)
+        print(tabulate(donnees, en_tete, tablefmt='fancy_grid', colalign=colalign))
+ 
         # Table de correspondance
-        print("\nCorrespondance des états :")
-        print("-" * 30)
-        for etat in etats:
-            etat_str = etat_to_string(etat)
-            anciens = ", ".join(str(e) for e in etat)
-            print(f"{etat_str} → {{{anciens}}}")
-        
-        return ""
-            
-        
+        print("\n  Table de correspondance des états :")
+        print("  " + "-"*40)
+        for etat in self.etats:
+            nom = nom[etat]
+            if isinstance(etat, tuple):
+                anciens = ', '.join(str(e) for e in etat)
+                print(f"  {nom:10s} ← {{{anciens}}}")
+            else:
+                print(f"  {nom:10s} ← {etat}")
 
+    def etat_to_str(self, etat):
+        if not etat:
+            return 'P'
+        if isinstance(etat, str):
+            return etat
+        parts = [str(e) for e in etat]
+
+        if all(len(p) == 1 for p in parts):
+            return ''.join(parts)
+        return '.'.join(parts)
 
 
 
@@ -270,65 +352,59 @@ class Automate :
             for cle in groupes_temp.keys():
                 groupes_next = self.Fusion_dicos(groupes_next, self.Diviseur_Etat(groupes_temp[cle], groupes_temp))
         return groupes_next
+    
+    from tabulate import tabulate
 
-    def recognizes_string(self, word):
+
+    
+
+    def lire_mot(self, mot):
         
         if not self.est_deterministe():
             print("Erreur : La reconnaissance de mots nécessite un automate déterministe.")
             return False
             
-        word = str(word)
-        if word == "" or word.lower() in ["epsilon", "mot_vide"]:
-            for initial_state in self.initial:
-                if initial_state in self.final:
-                    return True
-            return False
-
-        current_state = None
-        # On n'utilise pas l'index [0] qui peut faire crasher si la liste self.initial est vide
-        for state in self.initial:
-            current_state = state
-            break
-            
-        if current_state is None:
-            return False
+        etat_courant = self.initial[0]
         
-        for char in word:
-            if char not in self.alphabet:
+        for symbole in mot:
+            if symbole not in self.alphabet:
+                print(f"Symbole invalide : {symbole}.\nL'automate ne reconnaît pas le mot {mot}.")
                 return False
-                
-            trouve = False
-            # On parcourt la liste avec une boucle for src, sym, dst comme demandé
-            for src, sym, dst in self.transitions:
-                if str(src) == str(current_state) and str(sym) == str(char):
-                    current_state = dst
-                    trouve = True
+            
+            dest = None
+
+            for (dep, lettre, arr) in self.transitions:
+                if etat_courant == dep and symbole == lettre :
+                    dest = arr
                     break
-                    
-            if not trouve:
-                return False
-                
-        return current_state in self.final
+            
+            if dest is None:
+                return False 
+            etat_courant = dest
+            
+        return etat_courant in self.final
+        
 
-    def get_complementary(self):
+    def automate_complementaire(self):
 
-        if not self.est_deterministe() or not self.est_complet():
+        if not self.est_deterministe() :
             print("Erreur : L'automate doit être déterministe et complet (AFDC) pour créer son complémentaire.")
             return None
-            
-        # Création des nouveaux états finaux (inversion)
-        nouveaux_finaux = []
-        for etat in self.etats:
-            if etat not in self.final:
-                nouveaux_finaux.append(etat)
         
+        if not self.est_complet():
+            print("L'automate doitêtre complet. Faire d'abord la complétion.")
+            return None
+        
+        # Création des nouveaux états finaux (inversion)
+        nouveaux_finaux = [etat for etat in self.etats if etat not in self.final]
+
         # Création et retour du nouvel automate
         return Automate(
-            list(self.alphabet), 
-            list(self.etats), 
-            list(self.initial), 
+            self.alphabet, 
+            self.etats, 
+            self.initial, 
             nouveaux_finaux, 
-            list(self.transitions)
+            self.transitions
         )
 
 
@@ -363,41 +439,6 @@ def lecture_automate(chemin):
     return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
 
 
-
-
-def Affichage(alphabet, etats, etats_initiaux, etats_finaux, transitions):
-    donnee = []
-    en_tete =[' ', ' '] + alphabet
-
-    for etat in etats:
-        ligne = []
-
-        if etat in etats_initiaux and etat in etats_finaux:
-            ligne.append('ES')
-        elif etat in etats_initiaux:
-            ligne.append('E')
-        elif etat in etats_finaux:
-            ligne.append('S')
-        else :
-            ligne.append(' ')
-
-        ligne.append(etat)
-
-        for lettre in alphabet:
-            arrivee = []
-            for elt in transitions:
-                if elt[0] == etat and elt[1] == lettre:
-                    arrivee.append(elt[2])
-
-            ligne.append(','.join(arrivee))
-
-        donnee.append(ligne)
-
-    colonne = ["center"]*(2 + len(alphabet))
-
-
-
-    return tabulate(donnee, en_tete, tablefmt="fancy_grid", colalign=colonne)
 
 
 

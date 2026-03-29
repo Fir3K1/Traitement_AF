@@ -103,6 +103,29 @@ class Automate :
             nouvelles_transitions
         )
 
+    def Completion(self):
+    #on définir la poubelle
+        p=len(self.etats)
+        #on parcours tous les etats et leurs transitions pour detecter si une transition manque
+        for etat in self.etats:
+            for lettre in self.alphabet:
+                trouve=False
+                for transi in self.transitions:
+                    if transi[0]==etat and transi[1]==lettre:
+                        trouve=True
+                if trouve==False:
+                    new_transi=(etat,lettre,p)
+                    self.transitions.append(new_transi) #on redirige les transitions manquantes vers cet état poubelle
+
+        self.etats.append(p)
+        #on ajoute l'etat poubelle p à la liste d'états
+        for lettre in self.alphabet:
+            new_transi=(p, lettre,p )   
+            self.transitions.append(new_transi) 
+            #l'état poubelle a ses propres transitions vers lui meme pour chaque lettre
+
+
+
     def Appartenance_groupe(self, destination: int, groupes: dict):
         """renvoie le nom du groupe auquel la destination appartient"""
         for cle in groupes.keys():

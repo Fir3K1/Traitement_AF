@@ -124,6 +124,99 @@ class Automate :
             self.transitions.append(new_transi) 
             #l'état poubelle a ses propres transitions vers lui meme pour chaque lettre
 
+    def fermeture_epsilon(self, etats, transitions):
+        #etats est une liste d'états
+        #la fonction retourne tous les états atteignables par epsilon depuis ces états
+        fermeture = list(etats)  #on part des états donnés
+        a_traiter = list(etats)
+        
+        while a_traiter:
+            etat = a_traiter.pop(0)
+            for transi in transitions:
+                if transi[0] == etat and transi[1] == 'e':  #e pour epsilon
+                    if transi[2] not in fermeture:
+                        fermeture.append(transi[2])
+                        a_traiter.append(transi[2])
+        
+        return fermeture
+
+
+    def Determinisation_et_completion(self):
+
+        #D'abord on gère les états initiaux
+        transitions_originales = self.transitions.copy()
+
+        new_etat_initial = self.fermeture_epsilon(self.initial)
+        self.initial=new_etat_initial
+
+        etats_a_traiter=[self.initial]
+        self.etats=[self.initial]
+
+        self.transitions=[]
+
+        #Ensuite, on déterminise 
+        while etats_a_traiter:
+            etat=etats_a_traiter.pop(0) #On prend le 1er element et on le retire de la liste
+            for lettre in self.alphabet: #pour chaque lettre, calcul des etats atteignables
+                fleche=[] #represente les etats d'arrivés pour une lettre
+                for transi in transitions_originales:
+                    if transi[0]==etat and transi[1]==lettre:
+                        fleche.append(transi[2]) #liste d'etats atteignables pour chaque lettre de chaque etat
+                fleche=self.fermeture_epsilon(fleche, transitions_originales)
+                if fleche: #s'il y'a des etats d'arrivés pour l'etat et la lettre
+                    if fleche not in self.etats:
+                        self.etats.append(fleche)
+                        etats_a_traiter.append(fleche)
+                    self.transitions.append((etat,lettre,fleche))
+                    #on cree les nouveaux etats avec leurs transitions
+        
+
+        #Enfin, on complète l'automate s'il n'est pas complet
+        if self.est_complet==False:
+            self.Completion()
+    
+    def etat_to_string(etat):
+        #si tous les numéros sont <= 9, pas besoin de séparateur
+        if all(e <= 9 for e in etat):
+            return "".join(str(e) for e in etat)
+        else: #sinon, on a besoin de séparateurs. Par ex {12,3} different de {1,2,3}
+            return ".".join(str(e) for e in etat)
+
+    def Affichage_AFDC(alphabet, etats, etats_initiaux, etats_finaux, transitions):
+    #On l'affiche comme l'affichage classique + etats_listes en chaines lisibles + table correspondance anciens-nouveaux etats
+        print("\nTable de transition de l'automate déterministe complet :")
+        header = "Etats | " + " | ".join(alphabet)
+        print(header)
+        print("-" * len(header))
+        
+        for etat in etats:
+            prefix = ""
+            if etat in etats_initiaux: prefix += "E"
+            if etat in etats_finaux: prefix += "S"
+            
+            etat_str = etat_to_string(etat)
+            ligne = f"{prefix:<2} {etat_str:<6} | "
+            
+            transitions_etat = []
+            for lettre in alphabet:
+                destinations = [etat_to_string(t[2]) for t in transitions if t[0] == etat and t[1] == lettre]
+                transitions_etat.append(",".join(destinations) if destinations else "-")
+            
+            print(ligne + " | ".join(transitions_etat))
+
+        # Table de correspondance
+        print("\nCorrespondance des états :")
+        print("-" * 30)
+        for etat in etats:
+            etat_str = etat_to_string(etat)
+            anciens = ", ".join(str(e) for e in etat)
+            print(f"{etat_str} → {{{anciens}}}")
+        
+        return ""
+            
+        
+
+
 
 
     def Appartenance_groupe(self, destination: int, groupes: dict):

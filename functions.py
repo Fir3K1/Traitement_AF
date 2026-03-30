@@ -36,6 +36,8 @@ class Automate:
         if all(len(p) == 1 for p in parts):
             return ''.join(parts)
         return '.'.join(parts)
+        print(etat)
+        return ".".join(str(e) for e in etat)
 
 
 
@@ -136,6 +138,7 @@ class Automate:
         return True
 
     def standardiser(self):
+<<<<<<< Updated upstream
         if self.est_standard():
             return self
 
@@ -186,6 +189,7 @@ class Automate:
         return Automate(self.alphabet, nouv_etats, self.initial,
                         self.final, nouv_transitions)
 
+<<<<<<< Updated upstream
     def determinisation_et_completion(self):
         if self.est_deterministe(verbose=False):
             if self.est_complet(verbose=False):
@@ -205,6 +209,15 @@ class Automate:
         nouv_transitions = []
 
         while a_traiter:
+=======
+    def fermeture_epsilon(self, etats, transitions=None):
+        """Retourne tous les états atteignables par ε depuis `etats`."""
+        if transitions is None:
+            transitions = self.transitions
+        fermeture = list(etats)
+        a_traiter = list(etats)
+        while a_traiter:  # si encore des éléments dans la liste
+>>>>>>> Stashed changes
             etat = a_traiter.pop(0)
             for lettre in alphabet_sync:
                 # Calcul des états atteignables
@@ -234,6 +247,45 @@ class Automate:
             AFDC = AFDC.Completion()
 
         return AFDC
+            for (dep, lettre, arr) in transitions:
+                if dep == etat and lettre == 'e' and arr not in fermeture:
+                    fermeture.append(arr)
+                    a_traiter.append(arr)
+        return fermeture
+
+    def Determinisation_et_completion(self):
+        # D'abord on gère les états initiaux
+        transitions_originales = self.transitions.copy()
+
+        new_etat_initial = self.fermeture_epsilon(self.initial, self.transitions)
+        self.initial = new_etat_initial
+
+        etats_a_traiter = [self.etat_to_string(self.initial)]
+        etats_deja_traite = [list(self.initial)]
+        self.etats = list(self.initial)
+        self.transitions = []
+
+        # Ensuite, on déterminise
+        while etats_a_traiter:
+            etat_present = etats_a_traiter.pop(0)  # On prend le 1er element et on le retire de la liste
+            for lettre in self.alphabet:  # pour chaque lettre, calcul des etats atteignables
+                destinations = []  # represente les etats d'arrivés pour une lettre
+                for etat in etat_present:  # tous les états dans l'état présent (pour couvrir les états composés)
+                    for transi in transitions_originales:
+                        if transi[0] == etat and transi[1] == lettre and transi[2] not in destinations:
+                            destinations.append(
+                                transi[2])  # liste d'etats atteignables pour chaque lettre de chaque etat
+
+                destinations = self.fermeture_epsilon(destinations, transitions_originales)
+
+                if sorted(destinations) not in etats_deja_traite:
+                    etats_deja_traite.append(sorted(destinations))
+                    etats_a_traiter.append(sorted(destinations))
+                self.transitions.append(
+                    (self.etat_to_string(etat_present), lettre, self.etat_to_string(sorted(destinations))))
+
+        # Enfin, on complète l'automate s'il n'est pas deja complet
+        self.Completion()
 
     def Affichage_AFDC(self, titre="Automate Déterministe Complet"):
         """Affiche la table de transitions et la table de correspondance."""

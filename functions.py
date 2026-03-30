@@ -1,3 +1,4 @@
+from pytmx.pytmx import prop_type
 from tabulate import tabulate
 
 
@@ -14,9 +15,13 @@ class Automate:
         return (
             f"Alphabet    : {self.alphabet}\n"
             f"Etats       : {self.etats}\n"
+            f"Alphabet: {self.alphabet}\n"
+            f"Etats: {self.etats}\n"
             f"Initial(aux): {self.initial}\n"
             f"Final(aux)  : {self.final}\n"
             f"Transitions : {self.transitions}\n"
+            f"Final(s): {self.final}\n"
+            f"Transitions: {self.transitions}\n"
         )
 
     def etat_to_string(self, etat):
@@ -52,7 +57,28 @@ class Automate:
                     fermeture.append(arr)
                     a_traiter.append(arr)
         return fermeture
+        """ Convertit état (liste) en str."""
+        return ".".join(str(e) for e in etat)
 
+    #fonction récursive
+    def Fermeture_epsilon(self, etats: list):
+        """Retourne tous les états atteignables par ε depuis les états dans la liste (longueur 1 si un seul état)"""
+        if etats == []: #condition d'arrêt
+            return []
+        accessibles = []
+        for etat in etats:
+            for (depart, lettre, arrivee) in self.transitions:
+                if depart == etat and lettre == 'e' and (arrivee not in accessibles): #condition initiale
+                    accessibles.append(arrivee)
+        return accessibles + self.Fermeture_epsilon(accessibles) #etats accessibles déjà trouvés + ceux qu'on va trouver
+
+
+    def Groupes_Fermeture_Epsilon(self, etats: list):
+        """Prend une liste d'états en paramètre et renvoie un dico avec chaque état en clé et leurs fermetures ε"""
+        res = dict()
+        for etat in etats:
+            res[etat+"'"] = [etat] + self.Fermeture_epsilon(etats)
+        return res
 
 
     def Affichage(self):
@@ -102,6 +128,7 @@ class Automate:
         print("L'automate est standard.")
         return True
 
+
     def est_deterministe(self):
         if len(self.initial) != 1:
             print(f"Non déterministe : {len(self.initial)} état(s) initial/initiaux.")
@@ -121,6 +148,7 @@ class Automate:
         print("L'automate est déterministe.")
         return True
 
+
     def est_complet(self, verbose=True):
         alphabet_sync = [l for l in self.alphabet if l != 'e']
         cpt = 0
@@ -134,6 +162,7 @@ class Automate:
 
         print("L'automate est complet.")
         return True
+
 
     def standardiser(self):
         if self.est_standard():
@@ -158,6 +187,8 @@ class Automate:
         return Automate(self.alphabet, nouveaux_etats,
                         [nouveau_init], nouveaux_finaux, nouvelles_transitions)
  #
+
+
     def Completion(self):
         """
         Retourne un automate déterministe complet en ajoutant un état
@@ -197,6 +228,8 @@ class Automate:
 
         transitions_orig = self.transitions          # on ne modifie pas self
         alphabet_sync = [l for l in self.alphabet if l != 'e']
+    def est_asynchrone(self):
+        return "e" in [transi[1] for transi in self.transitions]
 
         etat_initial = tuple(sorted(
             self.fermeture_epsilon(self.initial, transitions_orig), key=str))
@@ -234,6 +267,53 @@ class Automate:
             AFDC = AFDC.Completion()
 
         return AFDC
+    def Determinisation_et_completion(self):
+        """Déterminise un automate et mets à jour ses attributs. Renvoie l'automate"""
+        nouv_etats= []
+        nouv_transitions = []
+        nouv_initial = [self.etat_to_string(self.initial)]
+        nouv_final = []
+
+        etats_a_traiter = [self.initial] #on commence la deter avec états init
+        etats_deja_traite = [list(self.initial)] #donc on considère états init comme déjà traités
+
+        while etats_a_traiter:
+            if self.est_asynchrone():
+                pass
+            else :
+                pass
+            etat_present = etats_a_traiter.pop()  # On prend le 1er element et on le retire de la liste
+            for lettre in self.alphabet:  #["a", "b"] pour chaque lettre, calcul des etats atteignables
+                #1. recherche de toutes les dest depuis un état
+                destinations = []  # represente les etats d'arrivés pour une lettre
+                for etat in etat_present:  # tous les états dans l'état présent (pour couvrir les états composés)
+                    for (depart, fleche, arrivee) in self.transitions:
+                        if depart == etat and fleche == lettre and arrivee not in destinations:
+                            destinations.append(arrivee)  # ajoute dans liste etats atteignables pour chaque lettre, chaque etat
+
+                #2. traitement des novueaux états trouvés
+                destinations.sort() #trier pour éviter différentes combi de même état composé
+                for sous_etat in destinations:
+                    if sous_etat in self.final and self.etat_to_string(destinations) not in nouv_final:
+                        nouv_final.append(self.etat_to_string(destinations)) #modif finals
+
+                #3. maj automate nouv_etats et nouv_transitions
+                if self.etat_to_string(destinations) not in nouv_etats:
+                    nouv_etats.append(self.etat_to_string(destinations)) #modif etats
+                nouv_transitions.append((self.etat_to_string(etat_present), lettre, self.etat_to_string(destinations))) #modif transi
+
+                if destinations not in etats_deja_traite: #si pas encore traité
+                    etats_a_traiter.append(destinations) #marquer état comme à traiter
+                    etats_deja_traite.append(destinations) #marquer état comme déjà traité
+
+        #4. remplacement par nouveaux etats + transitions
+        self.etats = nouv_etats
+        self.transitions = nouv_transitions
+        self.initial = nouv_initial
+        self.final = nouv_final
+
+        #5 completion
+        self.Completion()
 
     def Affichage_AFDC(self, titre="Automate Déterministe Complet"):
         """Affiche la table de transitions et la table de correspondance."""
@@ -427,4 +507,66 @@ def lecture_automate(chemin):
 
     etats = [str(i) for i in range(nb_etats)]
 
-    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
+    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
+
+
+"""  
+test = Automate(['a', 'b'],
+                ['0', '0.1', '0.1.2', '0.3', '0.4'],
+                ['0'],
+                ['0', '0.1', '0.1.2', '0.3'],
+                [("0", "a", "0"), ("0", "b", "0.1"),
+                 ("0.1", "a", "0"), ("0.1", "b", "0.1.2"),
+                 ("0.1.2", "a", "0.3"), ("0.1.2", "b", "0.1.2"),
+                 ("0.3", "a", "0.4"), ("0.3", "b", "0.1"),
+                 ("0.4", "a", "0"),("0.4", "b", "0.1")]
+         )
+
+"""
+
+
+test = Automate(alphabet = ['a', 'b'],
+                initial = ["0", "2"],
+                final = ["3"],
+                etats = ['0', '1', '2', '3'],
+                transitions = [("0", "a", "0"), ("0", "b", "2"),
+                               ("1", "a", "1"), ("1", "b", "1"),
+                               ("2", "a", "2"), ("2", "b", "3"),
+                               ("3", "a", "1"), ("3", "b", "2")]
+)
+
+
+
+
+#automate 34
+test2 = Automate(alphabet = ['a', 'b', 'e'],
+                initial = ["0"],
+                final = ["6"],
+                etats = ["0", "1", "2", "3", "4", "5", "6"],
+                transitions = [("0", "e", "1"), ("0", "e", "4"), 
+                               ("1", "e", "2"), ("1", "a", "2"),
+                               ("2", "b", "3"), 
+                               ("3", "e", "2"), ("3", "e", "6"),
+                               ("4", "b", "5"),
+                               ("5", "e", "4"), ("5", "e", "6")]
+)
+
+
+
+"""
+test = Automate(alphabet = ['a', 'b', 'e'],
+                initial = ["0"],
+                final = ["6"],
+                etats = ["0", "1", "2", "3", "4", "5", "6"],
+                transitions = [("0", "e", "1"), ("0", "e", "4"), 
+                               ("1", "e", "2"), ("1", "a", "2"),
+                               ("2", "b", "3"), 
+                               ("3", "e", "2"), ("3", "e", "6"),
+                               ("4", "b", "5"),
+                               ("5", "e", "4"), ("5", "e", "6")]
+)
+"""
+
+test.Determinisation_et_completion()
+print(test)
+

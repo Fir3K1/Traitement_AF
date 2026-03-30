@@ -108,7 +108,6 @@ def main():
                 print("\n--- Determinisation et completion ---")
                 #resultat = af.Determinisation_et_completion()
                 resultat = af.Completion()
-                #resultat.Affichage()
                 if resultat is None:
                     print("  Erreur : la determinisation a echoue.")
                 else:

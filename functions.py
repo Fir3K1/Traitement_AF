@@ -136,23 +136,27 @@ class Automate:
         return True
 
     def standardiser(self):
-        #gérer états
-        ancien_init = self.initial.copy()  #garde en mémoire anciens états initiaux
-        nouveau_initial = ".".join(sorted(self.initial)) #1.3.4
-        for i in self.initial:
-            self.etats.remove(i) #retire états initiaux des états
-        self.etats.append(nouveau_initial) #ajoute nouvel état init
-        self.initial = nouveau_initial #remplace init dans classe
+        if self.est_standard():
+            return self
 
-        #gérer transitions
-        for lettre in self.alphabet:
-            arrivee_nouveau_initial = []
-            for (depart, fleche, arrivee) in self.transitions:
-                if depart in ancien_init and fleche==lettre: #si fait partie de initial (était initial)
-                    arrivee_nouveau_initial.append(arrivee)
-            self.transitions.append((nouveau_initial, lettre, ".".join(sorted(arrivee_nouveau_initial))))
-        return self
+        nouveau_init = 'i'
+        nouveaux_etats = [nouveau_init] + self.etats
+        nouvelles_transitions = list(self.transitions)
 
+        for ancien_init in self.initial:
+            for (dep, lettre, arr) in self.transitions:
+                if dep == ancien_init:
+                    t = (nouveau_init, lettre, arr)
+                    if t not in nouvelles_transitions:
+                        nouvelles_transitions.append(t)
+
+        nouveaux_finaux = list(self.final)
+        if any(e in self.final for e in self.initial):
+            if nouveau_init not in nouveaux_finaux:
+                nouveaux_finaux.append(nouveau_init)
+
+        return Automate(self.alphabet, nouveaux_etats,
+                        [nouveau_init], nouveaux_finaux, nouvelles_transitions)
  #
     def Completion(self):
         """
@@ -164,15 +168,13 @@ class Automate:
 
         poubelle = 'P'
         nouv_etats = list(self.etats)
-        print(nouv_etats)
         nouv_transitions = list(self.transitions)
         poubelle_ajoutee = False
         alphabet_sync = [l for l in self.alphabet if l != 'e']
 
         for etat in self.etats:
             for lettre in alphabet_sync:
-                if not any(t[0] == etat and t[1] == lettre
-                           for t in nouv_transitions):
+                if not any(t[0] == etat and t[1] == lettre for t in nouv_transitions):
                     if not poubelle_ajoutee:
                         # Ajouter l'état poubelle et ses auto-boucles
                         nouv_etats.append(poubelle)
@@ -184,7 +186,7 @@ class Automate:
         return Automate(self.alphabet, nouv_etats, self.initial,
                         self.final, nouv_transitions)
 
-    def Determinisation_et_completion(self):
+    def determinisation_et_completion(self):
         if self.est_deterministe(verbose=False):
             if self.est_complet(verbose=False):
                 print("L'automate est déjà déterministe et complet.")
@@ -426,5 +428,3 @@ def lecture_automate(chemin):
     etats = [str(i) for i in range(nb_etats)]
 
     return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
-
-

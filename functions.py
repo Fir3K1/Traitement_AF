@@ -226,12 +226,16 @@ class Automate:
                 for etat in etat_present:  # tous les états dans l'état présent (pour couvrir les états composés)
                     for (depart, fleche, arrivee) in self.transitions:
                         if depart == etat and fleche == lettre and arrivee not in destinations:
+                            #distinction de cas sync
                             if not self.est_asynchrone():
                                 destinations.append(arrivee)
+                            #async
                             else:
                                 groupes_fermeture_epsilon = self.Fusion_dicos(groupes_fermeture_epsilon, self.Groupes_Fermeture_Epsilon(arrivee))
-                                destinations.append(groupes_fermeture_epsilon[arrivee]) # ajoute dans liste etats atteignables pour chaque lettre, chaque etat
-                            print(destinations)
+                                for element in groupes_fermeture_epsilon[arrivee]:
+                                    if element not in destinations:
+                                        destinations.append(element)  # ajoute dans liste etats atteignables pour chaque lettre, chaque etat
+                            print(destinations, groupes_fermeture_epsilon)
 
                 #2. traitement des novueaux états trouvés
                 destinations.sort() #trier pour éviter différentes combi de même état composé
@@ -512,3 +516,8 @@ test = Automate(alphabet = ['a', 'b', 'e'],
 test2.Determinisation_et_completion()
 print(test2)
 
+[('0.1.2.4', 'a', '2'), ('0.1.2.4', 'b', '2.3.4.5.6'),
+ ('2.3.4.5.6', 'a', ''), ('2.3.4.5.6', 'b', '2.3.4.5.6'),
+ ('', 'a', ''), ('', 'b', ''),
+ ('2', 'a', ''), ('2', 'b', '2.3.6'),
+ ('2.3.6', 'a', ''), ('2.3.6', 'b', '2.3.6')]

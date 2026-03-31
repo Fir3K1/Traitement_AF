@@ -1,3 +1,5 @@
+from locale import setlocale
+
 from pytmx.pytmx import prop_type
 from tabulate import tabulate
 
@@ -40,7 +42,18 @@ class Automate:
         """Prend une liste d'états en paramètre et renvoie un dico avec chaque état en clé et leurs fermetures ε"""
         res = dict()
         for etat in etats:
-            res[etat+"'"] = [etat] + self.Fermeture_epsilon(etats)
+            res[etat] = [etat] + self.Fermeture_epsilon(etats)
+        return res
+
+
+    def Fusion_dicos(self, dico1: dict, dico2: dict):
+        """Fusionne les dicos (ajoute ou additionne les listes)"""
+        res = dict(dico1)
+        for cle in dico2.keys():
+            if cle in res.keys():
+                res[cle] += [x for x in dico2[cle] if x not in res[cle]]
+            else:
+                res[cle] = dico2[cle]
         return res
 
 
@@ -180,35 +193,49 @@ class Automate:
 
 
     def est_asynchrone(self):
-        return "e" in [transi[1] for transi in self.transitions]
+        return "e" in self.alphabet
 
 
     def Determinisation_et_completion(self):
         """Déterminise un automate et mets à jour ses attributs. Renvoie l'automate"""
+        nouv_alphabet = [x for x in self.alphabet if x != "e"]
         nouv_etats= []
         nouv_transitions = []
         nouv_initial = [self.etat_to_string(self.initial)]
         nouv_final = []
 
-        etats_a_traiter = [self.initial] #on commence la deter avec états init
-        etats_deja_traite = [list(self.initial)] #donc on considère états init comme déjà traités
+        if self.est_asynchrone():
+            groupes_fermeture_epsilon = self.Groupes_Fermeture_Epsilon(self.initial)
+            etats_a_traiter = [] # on commence la deter avec états init
+            for values in groupes_fermeture_epsilon.values():
+                for element in values:
+                    if element not in etats_a_traiter:
+                        etats_a_traiter.append(element)
+            etats_a_traiter = [(sorted(etats_a_traiter))]
+            etats_deja_traite = etats_a_traiter.copy()  # donc on considère états init comme déjà traités
+
+        elif not self.est_asynchrone():
+            etats_a_traiter = [self.initial] #on commence la deter avec états init
+            etats_deja_traite = [list(self.initial)] #donc on considère états init comme déjà traités
 
         while etats_a_traiter:
-            if self.est_asynchrone():
-                pass
-            else :
-                pass
             etat_present = etats_a_traiter.pop()  # On prend le 1er element et on le retire de la liste
-            for lettre in self.alphabet:  #["a", "b"] pour chaque lettre, calcul des etats atteignables
+            for lettre in nouv_alphabet:  #["a", "b"] pour chaque lettre, calcul des etats atteignables
                 #1. recherche de toutes les dest depuis un état
                 destinations = []  # represente les etats d'arrivés pour une lettre
                 for etat in etat_present:  # tous les états dans l'état présent (pour couvrir les états composés)
                     for (depart, fleche, arrivee) in self.transitions:
                         if depart == etat and fleche == lettre and arrivee not in destinations:
-                            destinations.append(arrivee)  # ajoute dans liste etats atteignables pour chaque lettre, chaque etat
+                            if not self.est_asynchrone():
+                                destinations.append(arrivee)
+                            else:
+                                groupes_fermeture_epsilon = self.Fusion_dicos(groupes_fermeture_epsilon, self.Groupes_Fermeture_Epsilon(arrivee))
+                                destinations.append(groupes_fermeture_epsilon[arrivee]) # ajoute dans liste etats atteignables pour chaque lettre, chaque etat
+                            print(destinations)
 
                 #2. traitement des novueaux états trouvés
                 destinations.sort() #trier pour éviter différentes combi de même état composé
+
                 for sous_etat in destinations:
                     if sous_etat in self.final and self.etat_to_string(destinations) not in nouv_final:
                         nouv_final.append(self.etat_to_string(destinations)) #modif finals
@@ -223,6 +250,7 @@ class Automate:
                     etats_deja_traite.append(destinations) #marquer état comme déjà traité
 
         #4. remplacement par nouveaux etats + transitions
+        self.alphabet = nouv_alphabet
         self.etats = nouv_etats
         self.transitions = nouv_transitions
         self.initial = nouv_initial
@@ -317,28 +345,26 @@ class Automate:
                 groupes_temp[chaine_transi] = [etat]
         return groupes_temp  # {'01': ['0', '1'], '23': ['2'], '12': ['3']} clés sont les chemins pour chaque lettre, valeurs
 
-    def Fusion_dicos(self, dico1, dico2):
+    def Fusion_dicos_minimisation(self, dico1: dict, dico2: dict):
+        """crée un nouveau dictionnaire et renomme les états au passage"""
         res = {}
-        offset = 0
-        for v in dico1.values():
-            res[f'I{offset}'] = list(v)
-            offset += 1
-        for v in dico2.values():
-            res[f'I{offset}'] = list(v)
-            offset += 1
+        for i in range(len(dico1)):
+            res[f"I{i}"] = list(dico1.values())[i]
+        for i in range(len(dico2)):
+            res[f"I{i + len(dico1)}"] = list(dico2.values())[i]
         return res
 
     def Minimisation(self):
         terminaux = self.final.copy()
         non_terminaux = [x for x in self.etats if x not in terminaux]
         groupes_temp = {"I0": terminaux, "I1": non_terminaux}
-        groupes_next = self.Fusion_dicos(self.Diviseur_Etat(groupes_temp['I0'], groupes_temp),
+        groupes_next = self.Fusion_dicos_minimisation(self.Diviseur_Etat(groupes_temp['I0'], groupes_temp),
                                          self.Diviseur_Etat(groupes_temp['I1'], groupes_temp))
         while groupes_temp != groupes_next:
             groupes_temp = groupes_next.copy()
             groupes_next = dict()
             for cle in groupes_temp.keys():
-                groupes_next = self.Fusion_dicos(groupes_next, self.Diviseur_Etat(groupes_temp[cle], groupes_temp))
+                groupes_next = self.Fusion_dicos_minimisation(groupes_next, self.Diviseur_Etat(groupes_temp[cle], groupes_temp))
         return groupes_next
 
     def Affichage_Minimisation(self, groupes: dict):
@@ -483,6 +509,6 @@ test = Automate(alphabet = ['a', 'b', 'e'],
 )
 """
 
-test.Determinisation_et_completion()
-print(test)
+test2.Determinisation_et_completion()
+print(test2)
 

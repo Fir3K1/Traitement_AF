@@ -78,10 +78,8 @@ def main():
             elif choix == 2:
                 print("\n--- Test : standard ---")
                 af.est_standard()
-
                 print("\n--- Test : deterministe ---")
                 det = af.est_deterministe()
-
                 print("\n--- Test : complet ---")
                 if det:
                     af.est_complet()
@@ -106,14 +104,9 @@ def main():
 
             elif choix == 4:
                 print("\n--- Determinisation et completion ---")
-                #resultat = af.Determinisation_et_completion()
-                resultat = af.Completion()
-                if resultat is None:
-                    print("  Erreur : la determinisation a echoue.")
-                else:
-                    afdc  = resultat
-                    afdcm = None
-                    afdc.Affichage_AFDC()
+                resultat = af.Determinisation_et_completion()
+                afdc  = resultat
+                afdcm = None
 
             elif choix == 5:
                 print("\n--- Minimisation ---")

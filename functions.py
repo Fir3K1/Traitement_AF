@@ -115,15 +115,23 @@ class Automate:
         return True
 
     def est_complet(self):
+        cpt = 0
+
         for etat in self.etats:
+            l = []
             for lettre in [x for x in self.alphabet if x != "e"]:
-                trouve = False
+                trouve = []
                 for (depart, fleche, arrivee) in self.transitions:
                     if depart == etat and fleche == lettre and arrivee != "":
-                        trouve = True
-                        break
-                if not trouve:
-                    return False
+                        trouve.append(lettre)
+                if lettre not in trouve : 
+                    l.append(lettre)       
+                    cpt += 1
+            if l :
+                print(f"L'état {etat} ne possède pas de transition avec la lettre {l}.")
+
+        if cpt != 0:
+            return False
         return True
 
 

@@ -1,7 +1,3 @@
-from locale import setlocale
-from os import remove
-
-from pytmx.pytmx import prop_type
 from tabulate import tabulate
 
 
@@ -402,7 +398,6 @@ class Automate:
                                 if sous_etat2 in groupes_next[cle2] and (cle, lettre, cle2) not in nouv_transi:
                                     nouv_transi.append((cle, lettre, cle2))
 
-
         self.etats = nouv_etat
         self.transitions = nouv_transi
         self.initial = nouv_initial
@@ -429,7 +424,7 @@ class Automate:
 
         for symbole in mot:
             if symbole not in alphabet_sync:
-                print(f"  Symbole '{symbole}' n'appartient pas à l'alphabet {alphabet_sync} de l'automate.")
+                print(f"Symbole '{symbole}' n'appartient pas à l'alphabet {alphabet_sync} de l'automate.")
                 return False
                 
             dest = None
@@ -463,8 +458,7 @@ class Automate:
 
 def lecture_automate(chemin):
     with open(chemin, 'r') as f:
-        donnees = [ligne.strip() for ligne in f.readlines()
-                   if ligne.strip()]        # ignorer lignes vides
+        donnees = [ligne.strip() for ligne in f.readlines() if ligne.strip()]        # ignorer lignes vides
 
     nb_symboles = int(donnees[0])
     nb_etats = int(donnees[1])
@@ -523,72 +517,3 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
         if comp:
             f.write(comp.Affichage() + "\n")
 
-
-
-
-
-
-"""
-test3 = Automate(['a', 'b'],
-                ['0', '0.1', '0.1.2', '0.3', '0.4'],
-                ['0'],
-                ['0', '0.1', '0.1.2', '0.3'],
-                [("0", "a", "0"), ("0", "b", "0.1"),
-                 ("0.1", "a", "0"), ("0.1", "b", "0.1.2"),
-                 ("0.1.2", "a", "0.3"), ("0.1.2", "b", "0.1.2"),
-                 ("0.3", "a", "0.4"), ("0.3", "b", "0.1"),
-                 ("0.4", "a", "0"),("0.4", "b", "0.1")]
-         )
-
-
-
-test = Automate(alphabet = ['a', 'b'],
-                initial = ["0", "2"],
-                final = ["3"],
-                etats = ['0', '1', '2', '3'],
-                transitions = [("0", "a", "0"), ("0", "b", "2"),
-                               ("1", "a", "1"), ("1", "b", "1"),
-                               ("2", "a", "2"), ("2", "b", "3"),
-                               ("3", "a", "1"), ("3", "b", "2")]
-)
-
-
-
-
-#automate 34
-test2 = Automate(alphabet = ['a', 'b', 'e'],
-                initial = ["0"],
-                final = ["6"],
-                etats = ["0", "1", "2", "3", "4", "5", "6"],
-                transitions = [("0", "e", "1"), ("0", "e", "4"), 
-                               ("1", "e", "2"), ("1", "a", "2"),
-                               ("2", "b", "3"), 
-                               ("3", "e", "2"), ("3", "e", "6"),
-                               ("4", "b", "5"),
-                               ("5", "e", "4"), ("5", "e", "6")]
-)
-
-
-
-
-test = Automate(alphabet = ['a', 'b', 'e'],
-                initial = ["0"],
-                final = ["6"],
-                etats = ["0", "1", "2", "3", "4", "5", "6"],
-                transitions = [("0", "e", "1"), ("0", "e", "4"), 
-                               ("1", "e", "2"), ("1", "a", "2"),
-                               ("2", "b", "3"), 
-                               ("3", "e", "2"), ("3", "e", "6"),
-                               ("4", "b", "5"),
-                               ("5", "e", "4"), ("5", "e", "6")]
-)
-
-
-test3.Determinisation_et_completion()
-print(test3)
-print(test3.Minimisation())
-print(test3.Affichage_Minimisation())
-print(test3)
-#test2.Affichage_Minimisation(test2.Minimisation())
-
-"""

@@ -9,15 +9,6 @@ class Automate:
         self.final = final
         self.transitions = transitions
 
-    def __str__(self):
-        return (
-            f"Alphabet: {self.alphabet}\n"
-            f"Etats: {self.etats}\n"
-            f"Initial(aux): {self.initial}\n"
-            f"Final(s): {self.final}\n"
-            f"Transitions: {self.transitions}\n"
-        )
-
     def etat_to_string(self, etat):
         """ Convertit état (liste) en str."""
         return ".".join(str(e) for e in etat)

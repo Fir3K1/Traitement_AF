@@ -64,6 +64,8 @@ class Automate:
 
         donnee = []
         en_tete = [' ', 'etats'] + alphabet_affiche
+        if 'e' in self.alphabet:
+            en_tete.append('ε')
 
         for etat in self.etats:
             if etat in self.initial and etat in self.final:
@@ -76,7 +78,7 @@ class Automate:
                 marqueur = ''
 
             ligne = [marqueur, str(etat)]
-            for lettre in alphabet_affiche:
+            for lettre in self.alphabet:
                 arrivees = [str(t[2]) for t in self.transitions
                               if t[0] == etat and t[1] == lettre]
                 arrivees = sorted(arrivees)
@@ -209,8 +211,8 @@ class Automate:
 
     def Determinisation_et_completion_asynchrone(self):
         """Déterminise un automate ASYNCHRONE et met à jour ses attributs. Renvoie l'automate ainsi que ses fermetures sous la forme d'un dico"""
-        nouv_alphabet = [x for x in self.alphabet if x != "e"]
-        nouv_etats= [self.etat_to_string(self.initial)]
+        nouv_alphabet = [l for l in self.alphabet if l != 'e']
+        nouv_etats = [self.etat_to_string(self.initial)]
         nouv_transitions = []
         nouv_initial = [self.etat_to_string(self.initial)]
         nouv_final = []
@@ -226,13 +228,15 @@ class Automate:
 
                 # 1. recherche de toutes les dest depuis un état
                 destinations = [] # represente les etats d'arrivés pour une lettre
+                i = 0
                 # ajout différents état arrivée dans destination
                 for etat in etat_present:  # tous les états dans l'état présent (pour couvrir les états composés) [['2'], ['2', '3', '4', '5', '6']]
-                    for sous_etat in self.Groupes_Fermeture_Epsilon(etat)[etat]: #dico des fermetures epsilone {'3': ['3', '2', '6']} --> ['3', '2', '6']
+                    for sous_etat in self.Groupes_Fermeture_Epsilon([etat])[etat]: #dico des fermetures epsilone {'3': ['3', '2', '6']} --> ['3', '2', '6']
                         for (depart, fleche, arrivee) in self.transitions:
                             if depart == sous_etat and fleche == lettre and (arrivee not in destinations): #choisit la transition qui nous interesse
                                 destinations.append(arrivee)
                                 groupes_fermeture_epsilon = self.Fusion_dicos(groupes_fermeture_epsilon,self.Groupes_Fermeture_Epsilon(arrivee))
+                    i += 1
 
                 # 2. traitement des novueaux états trouvés
                 destinations.sort()  # trier pour éviter différentes combi de même état composé
@@ -318,8 +322,8 @@ class Automate:
         if self.est_asynchrone():
             automate, dico = self.Determinisation_et_completion_asynchrone()
             print(automate.Affichage())
-            for item in dico.items():
-                print(f"{item[0]}' : {item[1]}")
+            for item in sorted(dico.items()):
+                print(f"{item[0]}' : {sorted(item[1])}")
         else:
             automate = self.Determinisation_et_completion_synchrone()
             print(automate.Affichage())
@@ -377,9 +381,10 @@ class Automate:
         nouv_transi = []
         nouv_initial = []
         nouv_final = []
+        print(self.transitions)
+        print(groupes_next.keys())
 
-        for cle in groupes_next.keys():
-            destinations_sous_etat = []
+        for cle in groupes_next.keys():   
 
             for sous_etat in groupes_next[cle]: #etat dans ['3.5', '3']
                 if sous_etat in self.initial and sous_etat not in nouv_initial:
@@ -389,18 +394,20 @@ class Automate:
 
                 for transition in self.transitions:
                     for lettre in self.alphabet:
+                        destinations_sous_etat = []
                         if (transition[0] == sous_etat) and (transition[1] == lettre) and transition[2] not in destinations_sous_etat:
                             destinations_sous_etat.append(transition[2])
-                            print(destinations_sous_etat)
                         for cle2 in groupes_next.keys():
                             for sous_etat2 in destinations_sous_etat:
                                 if sous_etat2 in groupes_next[cle2] and (cle, lettre, cle2) not in nouv_transi:
                                     nouv_transi.append((cle, lettre, cle2))
+
+
         self.etats = nouv_etat
         self.transitions = nouv_transi
         self.initial = nouv_initial
         self.final = nouv_final
-
+        print(self.transitions)
 
         return self, groupes_next
 
@@ -412,13 +419,19 @@ class Automate:
 
 
     def lire_mot(self, mot):
+
+        if not self.est_deterministe():
+            print("Reconnaissance de mot impossible, veuillez déterminiser l'automate d'abord")
+            return False
+        
         etat_courant = self.initial[0]
         alphabet_sync = [l for l in self.alphabet if l != 'e']
 
         for symbole in mot:
             if symbole not in alphabet_sync:
-                print(f"  Symbole '{symbole}' hors alphabet {alphabet_sync}.")
+                print(f"  Symbole '{symbole}' n'appartient pas à l'alphabet {alphabet_sync} de l'automate.")
                 return False
+                
             dest = None
             for (dep, lettre, arr) in self.transitions:
                 if etat_courant == dep and symbole == lettre:
@@ -437,10 +450,10 @@ class Automate:
         (échange états finaux / non-finaux).
         Nécessite un AFDC en entrée.
         """
-        if not self.est_deterministe(verbose=False):
+        if not self.est_deterministe():
             print("Erreur : l'automate doit être déterministe et complet.")
             return None
-        if not self.est_complet(verbose=False):
+        if not self.est_complet():
             print("Erreur : l'automate doit être complet.")
             return None
         nouveaux_finaux = [e for e in self.etats if e not in self.final]
@@ -474,6 +487,42 @@ def lecture_automate(chemin):
     etats = [str(i) for i in range(nb_etats)]
 
     return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
+
+
+
+def Ecriture_trace(chemin_automate: str, chemin_trace: str):
+    """
+    Lit un automate depuis chemin_automate, exécute toutes les opérations
+    et écrit la trace dans chemin_trace (créé ou remplacé).
+    """
+    automate = lecture_automate(chemin_automate)
+
+    with open(chemin_trace, 'w', encoding='utf-8') as f:
+
+        f.write("=== AUTOMATE INITIAL ===\n")
+        f.write(automate.Affichage() + "\n\n")
+
+        f.write("=== STANDARDISATION ===\n")
+        std = automate.standardiser()
+        f.write(std.Affichage() + "\n\n")
+
+        f.write("=== DETERMINISATION ET COMPLETION ===\n")
+        det = lecture_automate(chemin_automate)  # on recharge pour repartir de zéro
+        det.Determinisation_et_completion()
+        f.write(det.Affichage() + "\n\n")
+
+        f.write("=== MINIMISATION ===\n")
+        min, groupes = det.Minimisation()
+        f.write(min.Affichage() + "\n")
+        for cle, etats in groupes.items():
+            f.write(f"  {cle} : {etats}\n")
+        f.write("\n")
+
+        f.write("=== COMPLEMENTAIRE ===\n")
+        comp = det.automate_complementaire()
+        if comp:
+            f.write(comp.Affichage() + "\n")
+
 
 
 

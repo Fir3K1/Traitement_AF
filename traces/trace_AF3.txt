@@ -1,8 +1,4 @@
-============================================================
-  AUTOMATE N°3
-============================================================
-
-[Automate initial]
+=== AUTOMATE INITIAL ===
 ╒═════╤═════════╤═════╕
 │     │  etats  │  a  │
 ╞═════╪═════════╪═════╡
@@ -11,29 +7,33 @@
 │  S  │    1    │  -  │
 ╘═════╧═════════╧═════╛
 
---- Test : standard ---
-
---- Test : déterministe ---
-
---- Test : complet ---
-
---- Déterminisation et complétion ---
-
---- Minimisation ---
-
---- Reconnaissance de mots ---
-  ''           → non reconnu
-  'a'          → RECONNU
-  'aa'         → non reconnu
-  'aaa'        → non reconnu
-
---- Automate complémentaire (depuis AFDC) ---
+=== STANDARDISATION ===
 ╒═════╤═════════╤═════╕
 │     │  etats  │  a  │
 ╞═════╪═════════╪═════╡
-│ ES  │    0    │  1  │
+│  E  │    0    │  1  │
 ├─────┼─────────┼─────┤
-│     │    1    │  P  │
-├─────┼─────────┼─────┤
-│  S  │    P    │  P  │
+│  S  │    1    │  -  │
 ╘═════╧═════════╧═════╛
+
+=== DETERMINISATION ET COMPLETION ===
+╒═════╤═════════╤═════╕
+│     │  etats  │  a  │
+╞═════╪═════════╪═════╡
+│  S  │    1    │  P  │
+├─────┼─────────┼─────┤
+│     │    P    │  P  │
+╘═════╧═════════╧═════╛
+
+=== MINIMISATION ===
+╒═════╤═════════╤═════╕
+│     │  etats  │  a  │
+╞═════╪═════════╪═════╡
+│  S  │   I0    │ I1  │
+├─────┼─────────┼─────┤
+│     │   I1    │ I1  │
+╘═════╧═════════╧═════╛
+  I0 : ['1']
+  I1 : ['P']
+
+=== COMPLEMENTAIRE ===

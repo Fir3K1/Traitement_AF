@@ -20,6 +20,17 @@ def main():
 
     print("\n\n   TRAITEMENT D'AUTOMATES FINIS - EFREI P2 2025/2026\n")
 
+    trace = input("\nVoulez-vous standardiser cet automate ? (o/n) : ").strip().lower()
+    if trace == 'o':
+        print("\nGénération des traces d'éxecution de tous les automates.")
+        # Génération des 44 fichiers de trace
+        for i in range(1, 45):
+            Ecriture_trace(f"AF/AF{i}.txt", f"traces/trace_AF{i}.txt")
+
+    
+    print("\nLancement du programme de traitement d'automates.")
+
+
     while True:
 
         af = None   # Automate original ou standardise
@@ -27,7 +38,7 @@ def main():
         afdcm = None   # Automate déterministe complet minimal
 
         try:
-            num = int(input("\n Numéro de l'automate à charger (1-44), ou 0 pour quitter : "))
+            num = int(input("Numéro de l'automate à charger (1-44), ou 0 pour quitter : "))
         except ValueError:
             print("--> Erreur : entier attendu.")
             continue
@@ -41,7 +52,7 @@ def main():
         chemin = f"AF/AF{num}.txt"
         try:
             af = lecture_automate(chemin)
-            print(f"\n Automate n°{num} chargé avec succès.")
+            print(f"\nAutomate n°{num} chargé avec succès.")
             print(af.Affichage())
         except FileNotFoundError:
             print(f"--> Erreur : fichier '{chemin}' introuvable.")
@@ -61,7 +72,7 @@ def main():
                 continue
 
             if choix == 0:
-                print("\n Fin du programme. Au revoir !")
+                print("\nFin du programme. Au revoir !")
                 return
 
             elif choix == 1:
@@ -77,14 +88,14 @@ def main():
                 if det:
                     af.est_complet()
                 else:
-                    print(" L'automate n'est pas deterministe donc il n'est pas complet. ")
+                    print("L'automate n'est pas deterministe donc il n'est pas complet. ")
 
             elif choix == 3:
                 print("\n--- Standardisation ---")
                 if af.est_standard():
-                    print(" L'automate est deja standard, aucune action necessaire.")
+                    print("L'automate est deja standard, aucune action necessaire.")
                 else:
-                    rep = input(" Voulez-vous standardiser cet automate ? (o/n) : ").strip().lower()
+                    rep = input("Voulez-vous standardiser cet automate ? (o/n) : ").strip().lower()
                     if rep == 'o':
                         af    = af.standardiser()
                         afdc  = None   # invalider AFDC/AFDCM anterieurs
@@ -102,7 +113,7 @@ def main():
             elif choix == 5:
                 print("\n--- Minimisation ---")
                 if afdc is None:
-                    print(" Action impossible : veuillez d'abord déterminiser l'automate (option 4).")
+                    print("Action impossible : veuillez d'abord déterminiser l'automate (option 4).")
                 else:
                     afdcm = afdc.Affichage_Minimisation()
 
@@ -112,31 +123,31 @@ def main():
                 cible = afdc 
 
                 if not cible.est_deterministe():
-                    print(" Action impossible : l'automate utilise n'est pas deterministe.")
-                    print(" Veuillez d'abord éxecuter la déterminisation sur l'automate (option 4).")
+                    print("Action impossible : l'automate utilise n'est pas deterministe.")
+                    print("Veuillez d'abord éxecuter la déterminisation sur l'automate (option 4).")
                 else:
-                    print(" Automate utilise :", "AFDC" if afdc is not None else "AF courant")
-                    print(" (tapez 'fin' pour revenir au menu)\n")
+                    print("Automate utilise :", "AFDC" if afdc is not None else "AF courant")
+                    print("(tapez 'fin' pour revenir au menu)\n")
                     while True:
                         mot = input(" Mot a tester : ").strip()
                         if mot.lower() == 'fin':
                             print(" Retour au menu.")
                             break
                         if cible.lire_mot(mot):
-                            print(f"  ==> '{mot}' est RECONNU par l'automate.")
+                            print(f" ==> '{mot}' est RECONNU par l'automate.")
                         else:
-                            print(f"  ==> '{mot}' n'est PAS reconnu par l'automate.")
+                            print(f" ==> '{mot}' n'est PAS reconnu par l'automate.")
 
             elif choix == 7:
                 print("\n--- Automate complementaire ---")
                 if afdc is None:
-                    print(" Action impossible : veuillez d'abord determiniser (option 4).")
+                    print("Action impossible : veuillez d'abord determiniser (option 4).")
                 else:
                     # Choix de la base : AFDC ou AFDCM
                     if afdcm is not None:
-                        print(" Construire le complementaire depuis :")
-                        print("   a) L'AFDC")
-                        print("   b) L'AFDCM (automate minimal)")
+                        print("Construire le complementaire depuis :")
+                        print("  a) L'AFDC")
+                        print("  b) L'AFDCM (automate minimal)")
                         base_choix = input("Votre choix (a/b) : ").strip().lower()
                         if base_choix == 'b':
                             base, source = afdcm, "AFDCM"
@@ -145,36 +156,30 @@ def main():
                     else:
                         base, source = afdc, "AFDC"
 
-                    print(f"\n Complementaire construit depuis : {source}")
+                    print(f"\nComplémentaire construit depuis : {source}")
                     comp = base.automate_complementaire()
 
                     if comp is not None:
-                        print("\n Automate complementaire :")
+                        print("\nAutomate complémentaire :")
                         # Si les etats sont des tuples (AFDC non renomme), on utilise Affichage_AFDC
                         if any(isinstance(e, tuple) for e in comp.etats):
                             comp.Affichage()
                         else:
                             print(comp.Affichage())
 
-                        rep = input("\n Remplacer l'automate courant par le complementaire ? (o/n) : ").strip().lower()
+                        rep = input("\nRemplacer l'automate courant par le complémentaire ? (o/n) : ").strip().lower()
                         if rep == 'o':
                             af    = comp
                             afdc  = None
                             afdcm = None
-                            print(" Automate courant mis a jour.")
+                            print("Automate courant mis à jour.")
 
             elif choix == 8:
-                print("\n Générer la trace d'éxecution de tous les automates.")
-                # Génération des 44 fichiers de trace
-                for i in range(1, 45):
-                    Ecriture_trace(f"AF/AF{i}.txt", f"traces/trace_AF{i}.txt")
-
-            elif choix == 9:
-                print("\n Changement d'automate.")
+                print("\nChangement d'automate.")
                 break
 
             else:
-                print(" Option invalide. Choisissez entre 0 et 8.")
+                print("Option invalide. Choisissez entre 0 et 8.")
 
 
 

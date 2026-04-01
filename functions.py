@@ -13,7 +13,7 @@ class Automate:
         """ Convertit état (liste) en str."""
         return ".".join(str(e) for e in etat)
 
-    #fonction récursive
+    # fonction récursive
     def Fermeture_epsilon(self, etats: list):
         """Retourne tous les états atteignables par ε depuis les états dans la liste (longueur 1 si un seul état)"""
         if etats == []: #condition d'arrêt
@@ -21,9 +21,9 @@ class Automate:
         accessibles = []
         for etat in etats:
             for (depart, lettre, arrivee) in self.transitions:
-                if depart == etat and lettre == 'e' and (arrivee not in accessibles): #condition initiale
+                if depart == etat and lettre == 'e' and (arrivee not in accessibles): # condition initiale
                     accessibles.append(arrivee)
-        return accessibles + self.Fermeture_epsilon(accessibles) #etats accessibles déjà trouvés + ceux qu'on va trouver
+        return accessibles + self.Fermeture_epsilon(accessibles) # états accessibles déjà trouvés + ceux qu'on va trouver
 
 
     def Groupes_Fermeture_Epsilon(self, etats: list):
@@ -449,29 +449,26 @@ class Automate:
 
 def lecture_automate(chemin):
     with open(chemin, 'r') as f:
-        donnees = [ligne.strip() for ligne in f.readlines() if ligne.strip()]        # ignorer lignes vides
+        donnees = [ligne.strip() for ligne in f.readlines() if ligne.strip()]  # ignorer lignes vides
 
-    nb_symboles = int(donnees[0])
+    nb_symboles = int(donnees[0]) # récupére le nombre de lettre
     nb_etats = int(donnees[1])
-    etats_initiaux = donnees[2].split()[1:]
+    etats_initiaux = donnees[2].split()[1:] # récupère les états initiaux à partir du rang 1 car le rang 0 représente le nombre de valeurs initiales
     etats_finaux = donnees[3].split()[1:]
     nb_transitions = int(donnees[4])
 
     transitions = []
+    lettres = []
     for donnee in donnees[5: 5 + nb_transitions]:
-        parts = donnee.split()
+        parts = donnee.split() # split() permet de retirer les espaces vides
         depart, lettre, arrivee = parts[0], parts[1], parts[2]
         transitions.append((depart, lettre, arrivee))
-
-    # Alphabet : 'a', 'b', … selon nb_symboles
-    # On ajoute 'e' seulement si des ε-transitions existent dans le fichier
-    lettres = [chr(ord('a') + i) for i in range(nb_symboles)]
-    if any(t[1] == 'e' for t in transitions) and 'e' not in lettres:
-        lettres[len(lettres)-1] = ('e')
+        if lettre not in lettres :
+            lettres.append(lettre)
 
     etats = [str(i) for i in range(nb_etats)]
 
-    return Automate(lettres, etats, etats_initiaux, etats_finaux, transitions)
+    return Automate(sorted(lettres), etats, etats_initiaux, etats_finaux, transitions)
 
 
 

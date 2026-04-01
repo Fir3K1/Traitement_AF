@@ -20,7 +20,7 @@ def main():
 
     print("\n\n   TRAITEMENT D'AUTOMATES FINIS - EFREI P2 2025/2026\n")
 
-    trace = input("\nVoulez-vous standardiser cet automate ? (o/n) : ").strip().lower()
+    trace = input("\nVoulez-vous générer les traces d'éxecution des automates ? (o/n) : ").strip().lower()
     if trace == 'o':
         print("\nGénération des traces d'éxecution de tous les automates.")
         # Génération des 44 fichiers de trace
@@ -86,7 +86,12 @@ def main():
                 det = af.est_deterministe()
                 print("\n--- Test : complet ---")
                 if det:
-                    af.est_complet()
+                    complet = af.est_complet()
+                    if complet:
+                        print("L'automate est complet.")
+                    else :
+                        print("L'automate n'est pas complet.")
+
                 else:
                     print("L'automate n'est pas deterministe donc il n'est pas complet. ")
 

@@ -92,15 +92,42 @@ L'automate est standard
   I2 : ['13.7', '13']
   I3 : ['4', '9', 'P']
 
+
+
+=== RECONNAISSANCE DES MOTS ===
+ ==> 'aaaaa' est RECONNU par l'automate.
+ ==> 'bbbbbb' n'est PAS reconnu par l'automate.
+ ==> 'ab' n'est PAS reconnu par l'automate.
+ ==> 'a' est RECONNU par l'automate.
+ ==> 'b' est RECONNU par l'automate.
+ ==> 'c' est RECONNU par l'automate.
+ ==> 'd' n'est PAS reconnu par l'automate.
+ ==> 'abcd' n'est PAS reconnu par l'automate.
+ ==> 'bd' n'est PAS reconnu par l'automate.
+ ==> 'bdbdbd' n'est PAS reconnu par l'automate.
+ ==> 'abbbbaaaa' n'est PAS reconnu par l'automate.
+ ==> 'abbbbcdddddd' n'est PAS reconnu par l'automate.
+ ==> '' est RECONNU par l'automate.
+ ==> 'dddd' n'est PAS reconnu par l'automate.
 === COMPLEMENTAIRE ===
-╒═════╤═════════╤═════╤═════╤═════╕
-│     │  etats  │  a  │  b  │  c  │
-╞═════╪═════════╪═════╪═════╪═════╡
-│  E  │   I0    │ I2  │ I1  │ I1  │
-├─────┼─────────┼─────┼─────┼─────┤
-│     │   I1    │ I3  │ I3  │ I1  │
-├─────┼─────────┼─────┼─────┼─────┤
-│     │   I2    │ I2  │ I3  │ I1  │
-├─────┼─────────┼─────┼─────┼─────┤
-│  S  │   I3    │ I3  │ I3  │ I3  │
-╘═════╧═════════╧═════╧═════╧═════╛
+╒═════╤═════════╤══════╤══════╤══════╕
+│     │  etats  │  a   │  b   │  c   │
+╞═════╪═════════╪══════╪══════╪══════╡
+│  E  │    0    │ 13.7 │ 16.4 │ 19.9 │
+├─────┼─────────┼──────┼──────┼──────┤
+│     │  13.7   │  13  │  P   │ 19.9 │
+├─────┼─────────┼──────┼──────┼──────┤
+│     │  16.4   │  P   │  4   │ 19.9 │
+├─────┼─────────┼──────┼──────┼──────┤
+│     │  19.9   │  P   │  P   │  19  │
+├─────┼─────────┼──────┼──────┼──────┤
+│     │   19    │  P   │  P   │  19  │
+├─────┼─────────┼──────┼──────┼──────┤
+│  S  │    4    │  P   │  4   │  9   │
+├─────┼─────────┼──────┼──────┼──────┤
+│  S  │    9    │  P   │  P   │  P   │
+├─────┼─────────┼──────┼──────┼──────┤
+│     │   13    │  13  │  P   │  19  │
+├─────┼─────────┼──────┼──────┼──────┤
+│  S  │    P    │  P   │  P   │  P   │
+╘═════╧═════════╧══════╧══════╧══════╛

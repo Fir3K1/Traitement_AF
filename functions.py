@@ -1,5 +1,6 @@
 from tabulate import tabulate
 import copy
+import random
 
 
 class Automate:
@@ -585,6 +586,7 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
             det.Completion()
             f.write(det.Affichage())
 
+        det_min = None
         f.write("\n\n=== MINIMISATION ===\n")
         det_min = copy.deepcopy(det)
         min, groupes = det_min.Minimisation()
@@ -593,8 +595,22 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
             f.write(f"  {cle} : {etats}\n")
         f.write("\n")
 
-        f.write("=== COMPLEMENTAIRE ===\n")
-        comp = det_min.automate_complementaire()
-        if comp:
-            f.write(comp.Affichage() + "\n")
+        f.write("\n\n=== RECONNAISSANCE DES MOTS ===\n")
+        test = ['aaaaa', 'bbbbbb', 'ab', 'a', 'b', 'c', 'd', 'abcd', 'bd', 'bdbdbd', 'abbbbaaaa', 'abbbbcdddddd', '', 'dddd']
+        for mot in test:
+            if not det_min :
+                if det_min.lire_mot(mot):
+                    f.write(f" ==> '{mot}' est RECONNU par l'automate.\n")
+                else :
+                    f.write(f" ==> '{mot}' n'est PAS reconnu par l'automate.\n")
+            else:
+                if det.lire_mot(mot):
+                    f.write(f" ==> '{mot}' est RECONNU par l'automate.\n")
+                else:
+                    f.write(f" ==> '{mot}' n'est PAS reconnu par l'automate.\n")
+
+
+        f.write("\n\n=== COMPLEMENTAIRE ===\n")
+        det = det.automate_complementaire()
+        f.write(det.Affichage() + "\n")
 

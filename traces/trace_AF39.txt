@@ -61,4 +61,34 @@
   I2 : ['2']
   I3 : ['0']
 
+
+
+=== RECONNAISSANCE DES MOTS ===
+ ==> 'aaaaa' est RECONNU par l'automate.
+ ==> 'bbbbbb' est RECONNU par l'automate.
+ ==> 'ab' est RECONNU par l'automate.
+ ==> 'a' est RECONNU par l'automate.
+ ==> 'b' n'est PAS reconnu par l'automate.
+ ==> 'c' n'est PAS reconnu par l'automate.
+ ==> 'd' n'est PAS reconnu par l'automate.
+ ==> 'abcd' n'est PAS reconnu par l'automate.
+ ==> 'bd' n'est PAS reconnu par l'automate.
+ ==> 'bdbdbd' n'est PAS reconnu par l'automate.
+ ==> 'abbbbaaaa' est RECONNU par l'automate.
+ ==> 'abbbbcdddddd' n'est PAS reconnu par l'automate.
+ ==> '' n'est PAS reconnu par l'automate.
+ ==> 'dddd' n'est PAS reconnu par l'automate.
 === COMPLEMENTAIRE ===
+╒═════╤═════════╤═════╤═════╕
+│     │  etats  │  a  │  b  │
+╞═════╪═════════╪═════╪═════╡
+│     │   1.2   │ 0.1 │ 1.2 │
+├─────┼─────────┼─────┼─────┤
+│  S  │    2    │  0  │  1  │
+├─────┼─────────┼─────┼─────┤
+│  S  │    0    │  1  │  2  │
+├─────┼─────────┼─────┼─────┤
+│     │    1    │  1  │  2  │
+├─────┼─────────┼─────┼─────┤
+│     │   0.1   │  1  │  2  │
+╘═════╧═════════╧═════╧═════╛

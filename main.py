@@ -114,6 +114,7 @@ def main():
                 print("\n--- Déterminisation et complétion ---")
                 if af.est_deterministe():
                     print("L'automate est déjà déterministe.")
+                    af.Completion()
                     afdc = af
                 else: 
                     afdc = af.Determinisation_et_completion()

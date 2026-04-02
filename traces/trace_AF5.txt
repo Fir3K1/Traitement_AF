@@ -55,4 +55,30 @@
   I0 : ['0.2', '0.4']
   I1 : ['0']
 
+
+
+=== RECONNAISSANCE DES MOTS ===
+ ==> 'aaaaa' n'est PAS reconnu par l'automate.
+ ==> 'bbbbbb' n'est PAS reconnu par l'automate.
+ ==> 'ab' n'est PAS reconnu par l'automate.
+ ==> 'a' est RECONNU par l'automate.
+ ==> 'b' est RECONNU par l'automate.
+ ==> 'c' n'est PAS reconnu par l'automate.
+ ==> 'd' n'est PAS reconnu par l'automate.
+ ==> 'abcd' n'est PAS reconnu par l'automate.
+ ==> 'bd' n'est PAS reconnu par l'automate.
+ ==> 'bdbdbd' n'est PAS reconnu par l'automate.
+ ==> 'abbbbaaaa' n'est PAS reconnu par l'automate.
+ ==> 'abbbbcdddddd' n'est PAS reconnu par l'automate.
+ ==> '' n'est PAS reconnu par l'automate.
+ ==> 'dddd' n'est PAS reconnu par l'automate.
 === COMPLEMENTAIRE ===
+╒═════╤═════════╤═════╤═════╕
+│     │  etats  │  a  │  b  │
+╞═════╪═════════╪═════╪═════╡
+│     │   0.2   │  0  │  0  │
+├─────┼─────────┼─────┼─────┤
+│     │   0.4   │  0  │  0  │
+├─────┼─────────┼─────┼─────┤
+│  S  │    0    │  0  │  0  │
+╘═════╧═════════╧═════╧═════╛

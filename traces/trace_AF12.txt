@@ -46,13 +46,30 @@ Complétion de l'automate déjà déterministe.
   I1 : ['0']
   I2 : ['P']
 
+
+
+=== RECONNAISSANCE DES MOTS ===
+ ==> 'aaaaa' est RECONNU par l'automate.
+ ==> 'bbbbbb' n'est PAS reconnu par l'automate.
+ ==> 'ab' n'est PAS reconnu par l'automate.
+ ==> 'a' est RECONNU par l'automate.
+ ==> 'b' n'est PAS reconnu par l'automate.
+ ==> 'c' n'est PAS reconnu par l'automate.
+ ==> 'd' n'est PAS reconnu par l'automate.
+ ==> 'abcd' n'est PAS reconnu par l'automate.
+ ==> 'bd' n'est PAS reconnu par l'automate.
+ ==> 'bdbdbd' n'est PAS reconnu par l'automate.
+ ==> 'abbbbaaaa' n'est PAS reconnu par l'automate.
+ ==> 'abbbbcdddddd' n'est PAS reconnu par l'automate.
+ ==> '' est RECONNU par l'automate.
+ ==> 'dddd' n'est PAS reconnu par l'automate.
 === COMPLEMENTAIRE ===
 ╒═════╤═════════╤═════╤═════╤═════╤═════╕
 │     │  etats  │  a  │  b  │  c  │  d  │
 ╞═════╪═════════╪═════╪═════╪═════╪═════╡
-│  E  │   I0    │ I0  │ I2  │ I1  │ I2  │
+│  S  │    0    │  P  │  0  │  P  │  1  │
 ├─────┼─────────┼─────┼─────┼─────┼─────┤
-│  S  │   I1    │ I2  │ I1  │ I2  │ I0  │
+│  E  │    1    │  1  │  P  │  0  │  P  │
 ├─────┼─────────┼─────┼─────┼─────┼─────┤
-│  S  │   I2    │ I2  │ I2  │ I2  │ I2  │
+│  S  │    P    │  P  │  P  │  P  │  P  │
 ╘═════╧═════════╧═════╧═════╧═════╧═════╛

@@ -12,6 +12,15 @@ class Automate:
         self.final = final
         self.transitions = transitions
 
+    def __str__(self):
+        return (
+            f"Alphabet    : {self.alphabet}\n"
+            f"Etats       : {self.etats}\n"
+            f"Initial(aux): {self.initial}\n"
+            f"Final(aux)  : {self.final}\n"
+            f"Transitions : {self.transitions}\n"
+        )
+
     def etat_to_string(self, etat):
         """ Convertit état (liste) en str."""
         return ".".join(str(e) for e in etat)
@@ -289,8 +298,6 @@ class Automate:
                     etats_a_traiter.append(etats_arrivee)
                     etats_deja_traite.append(etats_arrivee)
 
-
-
             nouv_transitions.extend(self.Image_etat_to_transi(etat_present, destinations))
             groupe_fermeture_epsilon = self.Groupes_Fermeture_Epsilon(self.etats)
 
@@ -318,34 +325,29 @@ class Automate:
         etats_a_traiter = [self.initial] #on commence la deter avec états init
         etats_deja_traite = [list(self.initial)] #donc on considère états init comme déjà traités
 
-        while etats_a_traiter:
-            etat_present = etats_a_traiter.pop()  # On prend le 1er element et on le retire de la liste
-            for lettre in self.alphabet:  # ["a", "b"] pour chaque lettre, calcul des etats atteignables depuis l'état actuel
-                # 1. recherche de toutes les dest depuis un état
-                destinations = []  # represente les etats d'arrivés pour une lettre
-                # ajout différents état arrivée dans destination
-                for etat in etat_present:  # tous les états dans l'état présent (pour couvrir les états composés) [['2'], ['2', '3', '4', '5', '6']]
-                    for (depart, fleche, arrivee) in self.transitions:
-                        if depart == etat and fleche == lettre and arrivee not in destinations:
-                            destinations.append(arrivee)    
+        while etats_a_traiter != []:
+            etat_present = etats_a_traiter.pop()
 
-                # 2. traitement des novueaux états trouvés (etats finaux)
-                destinations.sort()  # trier pour éviter différentes combi de même état composé
-                for sous_etat in destinations:
-                    #Si un des sous états de 'destinations' est final dans l'automate original, alors le nv etat est final
-                    if sous_etat in self.final and self.etat_to_string(destinations) not in nouv_final:
-                        nouv_final.append(self.etat_to_string(destinations))  # modif finals
+            image_etat = self.Image_etats(etat_present, self.transitions)
+            for lettre in image_etat.keys():
+                if self.etat_to_string(etat_present) not in nouv_etats:
+                    nouv_etats.append(self.etat_to_string(etat_present))
 
-                # 3. maj automate nouv_etats et nouv_transitions
-                if self.etat_to_string(destinations) not in nouv_etats:
-                    nouv_etats.append(self.etat_to_string(destinations))  # modif etats
-                # print(etat_present, lettre, destinations)
-                nouv_transitions.append(
-                    (self.etat_to_string(etat_present), lettre, self.etat_to_string(destinations)))  # modif transi
+                if (self.etat_to_string(etat_present), lettre, self.etat_to_string(image_etat[lettre])) not in nouv_transitions:
+                    nouv_transitions.append((self.etat_to_string(etat_present), lettre, self.etat_to_string(image_etat[lettre])))
 
-                if destinations not in etats_deja_traite:  # si pas encore traité
-                    etats_a_traiter.append(destinations)  # marquer état comme à traiter
-                    etats_deja_traite.append(destinations)  # marquer état comme déjà traité
+                for sous_etat in etat_present:
+                    #print(sous_etat, sous_etat in self.final, self.etat_to_string(etat_present) not in nouv_final)
+                    if (sous_etat in self.final) and (self.etat_to_string(etat_present) not in nouv_final): #mise a jour des etats finaux
+                        #print(etat_present)
+                        nouv_final.append(self.etat_to_string(etat_present))
+
+                if image_etat[lettre] not in etats_deja_traite: #mise à jour des transitions
+                    #print(image_etat[lettre])
+                    etats_a_traiter.append(image_etat[lettre])
+                    etats_deja_traite.append(image_etat[lettre])
+
+
 
         # 4. remplacement par nouveaux etats + transitions
         self.etats = nouv_etats
@@ -613,4 +615,3 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
         f.write("\n\n=== COMPLEMENTAIRE ===\n")
         det = det.automate_complementaire()
         f.write(det.Affichage() + "\n")
-

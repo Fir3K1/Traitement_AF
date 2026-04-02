@@ -23,14 +23,14 @@ class Automate:
             for (depart, lettre, arrivee) in self.transitions:
                 if depart == etat and lettre == 'e' and (arrivee not in accessibles): # condition initiale
                     accessibles.append(arrivee)
-        return accessibles + self.Fermeture_epsilon(accessibles) # états accessibles déjà trouvés + ceux qu'on va trouver
+        return accessibles + self.Fermeture_epsilon(accessibles) if accessibles else [] # états accessibles déjà trouvés + ceux qu'on va trouver
 
 
     def Groupes_Fermeture_Epsilon(self, etats: list):
         """Prend une liste d'états en paramètre et renvoie un dico avec chaque état en clé et leurs fermetures ε"""
-        res = dict()
+        res = {}
         for etat in etats:
-            res[etat] = [etat] + self.Fermeture_epsilon(etats)
+            res[etat] = [etat] + self.Fermeture_epsilon(etat)
         return res
 
 
@@ -80,7 +80,7 @@ class Automate:
     def est_standard(self):
         if len(self.initial) != 1:
             print(f"Non standard : {len(self.initial)} état(s) initial/initiaux.")
-            return False
+            return
         
         i = self.initial[0]
         cpt = 0
@@ -89,10 +89,12 @@ class Automate:
                 print(f"Non standard : transition vers l'état initial "f"depuis '{dep}' avec '{lettre}'.")
                 cpt += 1
         if cpt != 0:
-            return False
-        
-        print("L'automate est standard.")
-        return True
+            print("-->L'automate n'est pas standard.")
+            return
+        else: 
+            print("L'automate est standard.")
+            return
+ 
 
 
     def est_deterministe(self):
@@ -131,8 +133,12 @@ class Automate:
                 print(f"L'état {etat} ne possède pas de transition avec la lettre {l}.")
 
         if cpt != 0:
-            return False
-        return True
+            print("--> L'automate n'est pas complet.")
+            return
+        else:
+            print("L'automate est complet.")
+            return
+
 
 
 
@@ -200,56 +206,80 @@ class Automate:
         self.transitions = nouv_transitions
         return
 
+
+    def Image_etat_to_transi(self, etat: list, ImageEtat: dict):
+        transition = []
+        for cle in ImageEtat.keys():
+            transition.append((self.etat_to_string(etat), cle, self.etat_to_string(ImageEtat[cle])))
+        return sorted(transition)
+
     def est_asynchrone(self):
         return "e" in self.alphabet
 
 
+    def Image_etats(self, etats: list, transitions: list):
+        """renvoie les destinations des l'états (liste) spécifiés et renvoie un dictionnaire avec les différentes
+        lettres en clé et les états de destination en valeur, selon les transitions données en paramètre"""
+        if self.est_asynchrone():
+            temp = [self.Groupes_Fermeture_Epsilon([x])[x] for x in etats]
+            etats = []
+            for sous_etat in temp:
+                etats.extend(sous_etat)
+
+        destinations = dict()
+        for etat in etats:
+            for lettre in [lettre for lettre in self.alphabet if lettre != "e"]:
+                for (depart, fleche, arrivee) in transitions:
+                    if (depart == etat) and (fleche == lettre):
+                        if lettre not in destinations.keys():
+                            destinations[lettre] = [arrivee]
+                        else:
+                            if arrivee not in destinations[lettre]:
+                                destinations[lettre].append(arrivee)
+                                destinations[lettre].sort()
+
+        return destinations
+
+
     def Determinisation_et_completion_asynchrone(self):
         """Déterminise un automate ASYNCHRONE et met à jour ses attributs. Renvoie l'automate ainsi que ses fermetures sous la forme d'un dico"""
-        nouv_alphabet = [l for l in self.alphabet if l != 'e']
-        nouv_etats = [self.etat_to_string(self.initial)]
+        nouv_alphabet = [x for x in self.alphabet if x != "e"]
+        nouv_etats= [self.etat_to_string(self.initial)]
         nouv_transitions = []
         nouv_initial = [self.etat_to_string(self.initial)]
         nouv_final = []
 
-        groupes_fermeture_epsilon = self.Groupes_Fermeture_Epsilon(self.initial)
-
         etats_a_traiter = [self.initial] #on commence la deter avec états init
         etats_deja_traite = [list(self.initial)] #donc on considère états init comme déjà traités
 
-        while etats_a_traiter:
-            etat_present = etats_a_traiter.pop()  # On prend le 1er element et on le retire de la liste
-            for lettre in nouv_alphabet:  # ["a", "b"] pour chaque lettre, calcul des etats atteignables
+        while etats_a_traiter != []:
+            etat_present = etats_a_traiter.pop()
+            destinations = self.Image_etats(etat_present, self.transitions)
+            for lettre, etats_arrivee in destinations.items():
 
-                # 1. recherche de toutes les dest depuis un état
-                destinations = [] # represente les etats d'arrivés pour une lettre
-                i = 0
-                # ajout différents état arrivée dans destination
-                for etat in etat_present:  # tous les états dans l'état présent (pour couvrir les états composés) [['2'], ['2', '3', '4', '5', '6']]
-                    for sous_etat in self.Groupes_Fermeture_Epsilon([etat])[etat]: #dico des fermetures epsilone {'3': ['3', '2', '6']} --> ['3', '2', '6']
-                        for (depart, fleche, arrivee) in self.transitions:
-                            if depart == sous_etat and fleche == lettre and (arrivee not in destinations): #choisit la transition qui nous interesse
-                                destinations.append(arrivee)
-                                groupes_fermeture_epsilon = self.Fusion_dicos(groupes_fermeture_epsilon,self.Groupes_Fermeture_Epsilon(arrivee))
-                    i += 1
+                for sous_etat in etat_present:
+                    #print(sous_etat, sous_etat in self.initial, self.etat_to_string(etat_present) not in nouv_initial)
+                    if (sous_etat in self.initial) and (self.etat_to_string(etat_present) not in nouv_initial): #mise a jour des etats initiaux
+                        nouv_initial.append(self.etat_to_string(etat_present))
 
-                # 2. traitement des novueaux états trouvés
-                destinations.sort()  # trier pour éviter différentes combi de même état composé
-                for etat in destinations:
-                    for sous_etat in self.Groupes_Fermeture_Epsilon(etat)[etat]: #dico des fermetures epsilone {'3': ['3', '2', '6']} --> ['3', '2', '6']
-                        if sous_etat in self.final and self.etat_to_string(destinations) not in nouv_final:
-                            nouv_final.append(self.etat_to_string(destinations))  # modif finals
+                for sous_etat in etat_present:
+                    #print(self.Groupes_Fermeture_Epsilon(sous_etat)[sous_etat], self.final)
+                    for epsilon in self.Groupes_Fermeture_Epsilon([sous_etat])[sous_etat]:
+                        if (epsilon in self.final) and (self.etat_to_string(etat_present) not in nouv_final): #mise a jour des etats finaux
+                            nouv_final.append(self.etat_to_string(etat_present))
 
-                # 3. maj automate nouv_etats et nouv_transitions
-                if self.etat_to_string(destinations) not in nouv_etats:
-                    nouv_etats.append(self.etat_to_string(destinations))  # modif etats
-                # print(etat_present, lettre, destinations)
-                nouv_transitions.append(
-                    (self.etat_to_string(etat_present), lettre, self.etat_to_string(destinations)))  # modif transi
+                if self.etat_to_string(etats_arrivee) not in nouv_etats: #mise à jour des etats
+                    nouv_etats.append(self.etat_to_string(etats_arrivee))
 
-                if destinations not in etats_deja_traite:  # si pas encore traité
-                    etats_a_traiter.append(destinations)  # marquer état comme à traiter
-                    etats_deja_traite.append(destinations)  # marquer état comme déjà traité
+                if etats_arrivee not in etats_deja_traite : #mise à jour des transitions
+                    etats_a_traiter.append(etats_arrivee)
+                    etats_deja_traite.append(etats_arrivee)
+
+
+
+            nouv_transitions.extend(self.Image_etat_to_transi(etat_present, destinations))
+            groupe_fermeture_epsilon = self.Groupes_Fermeture_Epsilon(self.etats)
+
 
         # 4. remplacement par nouveaux etats + transitions
         self.alphabet = nouv_alphabet
@@ -261,7 +291,7 @@ class Automate:
         # 5 completion
         self.Completion()
 
-        return self, groupes_fermeture_epsilon
+        return self, groupe_fermeture_epsilon
 
 
     def Determinisation_et_completion_synchrone(self):
@@ -493,13 +523,19 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
         f.write(automate.Affichage() + "\n\n")
 
         f.write("=== STANDARDISATION ===\n")
-        std = automate.standardiser()
-        f.write(std.Affichage() + "\n\n")
+        if not automate.est_standard():
+            std = automate.standardiser()
+            f.write(std.Affichage() + "\n\n")
+        else: 
+            f.write("L'automate est standard")
 
         f.write("=== DETERMINISATION ET COMPLETION ===\n")
         det = lecture_automate(chemin_automate)  # on recharge pour repartir de zéro
-        det.Determinisation_et_completion()
-        f.write(det.Affichage() + "\n\n")
+        if not det.est_deterministe():
+            det.Determinisation_et_completion()
+            f.write(det.Affichage() + "\n\n")
+        else:
+            f.write("L'automate est déjà déterministe.")
 
         f.write("=== MINIMISATION ===\n")
         min, groupes = det.Minimisation()

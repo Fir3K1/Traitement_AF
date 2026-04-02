@@ -87,11 +87,8 @@ def main():
                 print("\n--- Test : complet ---")
                 if det:
                     afdc = af
-                    complet = af.est_complet()
-                    if complet:
-                        print("--> L'automate est complet.")
-                    else :
-                        print("L'automate n'est pas complet.")
+                    af.est_complet()
+                    
 
                 else:
                     print("L'automate n'est pas deterministe donc il n'est pas complet. ")

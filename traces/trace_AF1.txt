@@ -6,22 +6,13 @@
 ╘═════╧═════════╛
 
 === STANDARDISATION ===
+L'automate est standard=== DETERMINISATION ET COMPLETION ===
+L'automate est déjà déterministe.=== MINIMISATION ===
 ╒═════╤═════════╕
 │     │  etats  │
 ╞═════╪═════════╡
-│ ES  │    0    │
+│ ES  │   I0    │
 ╘═════╧═════════╛
-
-=== DETERMINISATION ET COMPLETION ===
-╒═════╤═════════╕
-│     │ etats   │
-╞═════╪═════════╡
-╘═════╧═════════╛
-
-=== MINIMISATION ===
-╒═════╤═════════╕
-│     │ etats   │
-╞═════╪═════════╡
-╘═════╧═════════╛
+  I0 : ['0']
 
 === COMPLEMENTAIRE ===

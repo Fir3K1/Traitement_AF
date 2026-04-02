@@ -317,7 +317,7 @@ class Automate:
 
     def Determinisation_et_completion_synchrone(self):
         """Déterminise un automate et mets à jour ses attributs. Renvoie l'automate"""
-        nouv_etats= []
+        nouv_etats= [self.etat_to_string(self.initial)]
         nouv_transitions = []
         nouv_initial = [self.etat_to_string(self.initial)] #etat initial -> liste des anciens etat initiaux convertie en str
         nouv_final = []
@@ -330,17 +330,17 @@ class Automate:
 
             image_etat = self.Image_etats(etat_present, self.transitions)
             for lettre in image_etat.keys():
-                if self.etat_to_string(etat_present) not in nouv_etats:
-                    nouv_etats.append(self.etat_to_string(etat_present))
+                if self.etat_to_string(image_etat[lettre]) not in nouv_etats:
+                    nouv_etats.append(self.etat_to_string(image_etat[lettre]))
 
                 if (self.etat_to_string(etat_present), lettre, self.etat_to_string(image_etat[lettre])) not in nouv_transitions:
                     nouv_transitions.append((self.etat_to_string(etat_present), lettre, self.etat_to_string(image_etat[lettre])))
 
-                for sous_etat in etat_present:
+                for sous_etat in image_etat[lettre]:
                     #print(sous_etat, sous_etat in self.final, self.etat_to_string(etat_present) not in nouv_final)
-                    if (sous_etat in self.final) and (self.etat_to_string(etat_present) not in nouv_final): #mise a jour des etats finaux
+                    if (sous_etat in self.final) and (self.etat_to_string(image_etat[lettre]) not in nouv_final): #mise a jour des etats finaux
                         #print(etat_present)
-                        nouv_final.append(self.etat_to_string(etat_present))
+                        nouv_final.append(self.etat_to_string(image_etat[lettre]))
 
                 if image_etat[lettre] not in etats_deja_traite: #mise à jour des transitions
                     #print(image_etat[lettre])
@@ -436,6 +436,8 @@ class Automate:
                                 if sous_etat2 in groupes_next[cle2] and (cle, lettre, cle2) not in nouv_transi:
                                     nouv_transi.append((cle, lettre, cle2))
         return nouv_etat, nouv_initial, nouv_final, nouv_transi
+
+
 
     def Minimisation(self):
         terminaux = self.final.copy()
@@ -617,7 +619,7 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
         f.write(det.Affichage() + "\n")
 
 
-test = lecture_automate("AF/AF5.txt")
+"""test = lecture_automate("AF/AF6.txt")
 print(test)
 test.Determinisation_et_completion()
-print(test)
+print(test)"""

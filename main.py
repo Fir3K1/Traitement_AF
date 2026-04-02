@@ -24,6 +24,7 @@ def main():
         print("\nGénération des traces d'éxecution de tous les automates.")
         # Génération des 44 fichiers de trace
         for i in range(1, 45):
+            print(i)
             Ecriture_trace(f"AF/AF{i}.txt", f"traces/trace_AF{i}.txt")
 
     

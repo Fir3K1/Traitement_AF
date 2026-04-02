@@ -615,3 +615,9 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
         f.write("\n\n=== COMPLEMENTAIRE ===\n")
         det = det.automate_complementaire()
         f.write(det.Affichage() + "\n")
+
+
+test = lecture_automate("AF/AF5.txt")
+print(test)
+test.Determinisation_et_completion()
+print(test)

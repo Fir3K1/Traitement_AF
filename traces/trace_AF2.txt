@@ -17,6 +17,12 @@
 
 === DETERMINISATION ET COMPLETION ===
 L'automate est déjà déterministe.
+Complétion de l'automate déjà déterministe.
+╒═════╤═════════╤═════╕
+│     │  etats  │  a  │
+╞═════╪═════════╪═════╡
+│ ES  │    0    │  0  │
+╘═════╧═════════╧═════╛
 
 === MINIMISATION ===
 ╒═════╤═════════╤═════╕

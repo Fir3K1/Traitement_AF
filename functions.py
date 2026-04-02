@@ -1,4 +1,5 @@
 from tabulate import tabulate
+import copy
 
 
 class Automate:
@@ -78,7 +79,6 @@ class Automate:
             donnee.append(ligne)
 
         colonne = ['center'] * len(en_tete)
-        print(donnee)
         return tabulate(donnee, en_tete, tablefmt='fancy_grid', colalign=colonne)
 
 
@@ -185,7 +185,7 @@ class Automate:
         poubelle 'P' si des transitions manquent.
         """
         if self.est_complet():
-            return
+            return self
         # on parcourt tous les etats et leurs transitions pour detecter si une transition manque ou est = ""
         nouv_transitions = []
 
@@ -408,25 +408,13 @@ class Automate:
         for i in range(len(dico2)):
             res[f"I{i + len(dico1)}"] = list(dico2.values())[i]
         return res
-
-    def Minimisation(self):
-        terminaux = self.final.copy()
-        non_terminaux = [x for x in self.etats if x not in terminaux]
-        groupes_temp = {"I0": terminaux, "I1": non_terminaux}
-        groupes_next = self.Fusion_dicos_minimisation(self.Diviseur_Etat(groupes_temp['I0'], groupes_temp),
-                                         self.Diviseur_Etat(groupes_temp['I1'], groupes_temp))
-        while groupes_temp != groupes_next:
-            groupes_temp = groupes_next.copy()
-            groupes_next = dict()
-            for cle in groupes_temp.keys():
-                groupes_next = self.Fusion_dicos_minimisation(groupes_next, self.Diviseur_Etat(groupes_temp[cle], groupes_temp))
-
+    
+    def groupe_to_etats(self, groupes_next):
         nouv_etat = list(groupes_next.keys())
         nouv_transi = []
         nouv_initial = []
         nouv_final = []
-
-
+    
         for cle in groupes_next.keys():   
 
             for sous_etat in groupes_next[cle]: #etat dans ['3.5', '3']
@@ -444,6 +432,32 @@ class Automate:
                             for sous_etat2 in destinations_sous_etat:
                                 if sous_etat2 in groupes_next[cle2] and (cle, lettre, cle2) not in nouv_transi:
                                     nouv_transi.append((cle, lettre, cle2))
+        return nouv_etat, nouv_initial, nouv_final, nouv_transi
+
+    def Minimisation(self):
+        terminaux = self.final.copy()
+        non_terminaux = [x for x in self.etats if x not in terminaux]
+        groupes_temp = {"I0": terminaux, "I1": non_terminaux}
+        groupes_next = self.Fusion_dicos_minimisation(self.Diviseur_Etat(groupes_temp['I0'], groupes_temp),
+                                         self.Diviseur_Etat(groupes_temp['I1'], groupes_temp))
+        
+        nouv_etat = list(groupes_next.keys())
+        nouv_transi = []
+        nouv_initial = []
+        nouv_final = []
+
+        while groupes_temp != groupes_next:
+            groupes_temp = groupes_next.copy()
+            groupes_next = dict()
+            for cle in groupes_temp.keys():
+                groupes_next = self.Fusion_dicos_minimisation(groupes_next, self.Diviseur_Etat(groupes_temp[cle], groupes_temp))
+            (nouv_etat, nouv_initial, nouv_final, nouv_transi) = self.groupe_to_etats(groupes_next)
+            nouv_auto = Automate(self.alphabet, nouv_etat, nouv_initial, nouv_final, nouv_transi)
+            print(nouv_auto.Affichage())
+            for item in groupes_next.items():
+                print(f"{item[0]}' : {item[1]}")
+            print("============================\n")
+
 
         self.etats = nouv_etat
         self.transitions = nouv_transi
@@ -451,12 +465,13 @@ class Automate:
         self.final = nouv_final
 
         return self, groupes_next
+    
+
 
     def Affichage_Minimisation(self):
         automate, dico = self.Minimisation()
-        print(automate.Affichage())
-        for item in dico.items():
-            print(f"{item[0]}' : {item[1]}")
+        return automate
+
 
 
     def lire_mot(self, mot):
@@ -554,8 +569,8 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
 
         f.write("=== STANDARDISATION ===\n")
         if not automate.est_standard():
-            std = automate.standardiser()
-            f.write(std.Affichage() + "\n\n")
+            automate = automate.standardiser()
+            f.write(automate.Affichage() + "\n\n")
         else: 
             f.write("L'automate est standard\n")
 
@@ -565,17 +580,21 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
             det.Determinisation_et_completion()
             f.write(det.Affichage() + "\n\n")
         else:
-            f.write("L'automate est déjà déterministe.")
+            f.write("L'automate est déjà déterministe.\n")
+            f.write("Complétion de l'automate déjà déterministe.\n")
+            det.Completion()
+            f.write(det.Affichage())
 
         f.write("\n\n=== MINIMISATION ===\n")
-        min, groupes = det.Minimisation()
+        det_min = copy.deepcopy(det)
+        min, groupes = det_min.Minimisation()
         f.write(min.Affichage() + "\n")
         for cle, etats in groupes.items():
             f.write(f"  {cle} : {etats}\n")
         f.write("\n")
 
         f.write("=== COMPLEMENTAIRE ===\n")
-        comp = det.automate_complementaire()
+        comp = det_min.automate_complementaire()
         if comp:
             f.write(comp.Affichage() + "\n")
 

@@ -10,13 +10,24 @@ L'automate est standard
 
 === DETERMINISATION ET COMPLETION ===
 L'automate est déjà déterministe.
+Complétion de l'automate déjà déterministe.
+╒═════╤═════════╤═════╕
+│     │  etats  │  a  │
+╞═════╪═════════╪═════╡
+│ ES  │    0    │  P  │
+├─────┼─────────┼─────┤
+│     │    P    │  P  │
+╘═════╧═════════╧═════╛
 
 === MINIMISATION ===
 ╒═════╤═════════╤═════╕
 │     │  etats  │  a  │
 ╞═════╪═════════╪═════╡
-│ ES  │   I0    │  -  │
+│     │   I0    │  -  │
+├─────┼─────────┼─────┤
+│     │   I1    │  -  │
 ╘═════╧═════════╧═════╛
   I0 : ['0']
+  I1 : ['P']
 
 === COMPLEMENTAIRE ===

@@ -81,12 +81,14 @@ def main():
             elif choix == 2:
                 print("\n--- Test : standard ---")
                 af.est_standard()
+
                 print("\n--- Test : déterministe ---")
                 det = af.est_deterministe()
+
                 print("\n--- Test : complet ---")
                 if det:
-                    afdc = af.Completion()
-                    print(afdc.Affichage())
+                    af.Completion()
+                    print(af.Affichage())
                     af.est_complet()
                     
 
@@ -112,9 +114,10 @@ def main():
                 print("\n--- Déterminisation et complétion ---")
                 if af.est_deterministe():
                     print("L'automate est déjà déterministe.")
+                    afdc = af
                 else: 
                     afdc = af.Determinisation_et_completion()
-                    afdcm = None
+                afdcm = None
 
             elif choix == 5:
                 print("\n--- Minimisation ---")
@@ -126,7 +129,7 @@ def main():
             elif choix == 6:
                 print("\n--- Reconnaissance de mots ---")
 
-                cible = afdc 
+                cible = afdcm if afdcm is not None else afdc
 
                 if not cible.est_deterministe():
                     print("Action impossible : l'automate utilise n'est pas deterministe.")

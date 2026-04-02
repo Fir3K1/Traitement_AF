@@ -85,7 +85,8 @@ def main():
                 det = af.est_deterministe()
                 print("\n--- Test : complet ---")
                 if det:
-                    afdc = af
+                    afdc = af.Completion()
+                    print(afdc.Affichage())
                     af.est_complet()
                     
 

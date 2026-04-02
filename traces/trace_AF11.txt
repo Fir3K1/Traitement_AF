@@ -26,8 +26,11 @@
 │     │    3    │  3  │  3  │
 ╘═════╧═════════╧═════╧═════╛
 
+
 === DETERMINISATION ET COMPLETION ===
-L'automate est déjà déterministe.=== MINIMISATION ===
+L'automate est déjà déterministe.
+
+=== MINIMISATION ===
 ╒═════╤═════════╤═════╤═════╕
 │     │  etats  │  a  │  b  │
 ╞═════╪═════════╪═════╪═════╡
@@ -42,3 +45,12 @@ L'automate est déjà déterministe.=== MINIMISATION ===
   I2 : ['1', '3']
 
 === COMPLEMENTAIRE ===
+╒═════╤═════════╤═════╤═════╕
+│     │  etats  │  a  │  b  │
+╞═════╪═════════╪═════╪═════╡
+│     │   I0    │ I2  │ I1  │
+├─────┼─────────┼─────┼─────┤
+│ ES  │   I1    │ I0  │ I2  │
+├─────┼─────────┼─────┼─────┤
+│  S  │   I2    │ I2  │ I2  │
+╘═════╧═════════╧═════╧═════╛

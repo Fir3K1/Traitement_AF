@@ -30,8 +30,11 @@
 │     │    4    │  0  │  -  │
 ╘═════╧═════════╧═════╧═════╛
 
+
 === DETERMINISATION ET COMPLETION ===
-L'automate est déjà déterministe.=== MINIMISATION ===
+L'automate est déjà déterministe.
+
+=== MINIMISATION ===
 ╒═════╤═════════╤═════╤═════╕
 │     │  etats  │  a  │  b  │
 ╞═════╪═════════╪═════╪═════╡

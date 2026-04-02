@@ -74,6 +74,7 @@ class Automate:
             donnee.append(ligne)
 
         colonne = ['center'] * len(en_tete)
+        print(donnee)
         return tabulate(donnee, en_tete, tablefmt='fancy_grid', colalign=colonne)
 
 
@@ -134,10 +135,10 @@ class Automate:
 
         if cpt != 0:
             print("--> L'automate n'est pas complet.")
-            return
+            return False 
         else:
             print("L'automate est complet.")
-            return
+            return True
 
 
 
@@ -204,7 +205,7 @@ class Automate:
                 nouv_transitions.append(("P", lettre, "P"))  # l'état poubelle a ses propres transitions vers lui meme pour chaque lettre
 
         self.transitions = nouv_transitions
-        return
+        return self
 
 
     def Image_etat_to_transi(self, etat: list, ImageEtat: dict):
@@ -344,17 +345,20 @@ class Automate:
         return self
 
     def Determinisation_et_completion(self):
-        if self.est_deterministe:
-            return False
-        if self.est_asynchrone():
-            automate, dico = self.Determinisation_et_completion_asynchrone()
-            print(automate.Affichage())
-            for item in sorted(dico.items()):
-                print(f"{item[0]}' : {sorted(item[1])}")
+        if self.est_deterministe():
+            print(self.Affichage)
+            return self
+        
         else:
-            automate = self.Determinisation_et_completion_synchrone()
-            print(automate.Affichage())
-        return self
+            if self.est_asynchrone():
+                automate, dico = self.Determinisation_et_completion_asynchrone()
+                print(automate.Affichage())
+                for item in sorted(dico.items()):
+                    print(f"{item[0]}' : {sorted(item[1])}")
+            else:
+                automate = self.Determinisation_et_completion_synchrone()
+                print(automate.Affichage())
+            return self
 
 
 
@@ -408,8 +412,7 @@ class Automate:
         nouv_transi = []
         nouv_initial = []
         nouv_final = []
-        print(self.transitions)
-        print(groupes_next.keys())
+
 
         for cle in groupes_next.keys():   
 
@@ -433,7 +436,6 @@ class Automate:
         self.transitions = nouv_transi
         self.initial = nouv_initial
         self.final = nouv_final
-        print(self.transitions)
 
         return self, groupes_next
 
@@ -479,6 +481,7 @@ class Automate:
         if not self.est_deterministe():
             print("Erreur : l'automate doit être déterministe et complet.")
             return None
+        print(self.Affichage())
         if not self.est_complet():
             print("Erreur : l'automate doit être complet.")
             return None
@@ -498,6 +501,7 @@ def lecture_automate(chemin):
     nb_transitions = int(donnees[4])
 
     cpt = 0
+    l = 0
     transitions = []
     lettres = []
     for donnee in donnees[5: 5 + nb_transitions]:
@@ -508,6 +512,10 @@ def lecture_automate(chemin):
             lettres.append(lettre)
         if depart == 'P' or arrivee == 'P':
             cpt = 1
+
+    if not transitions:
+        lettres = ['a']
+
 
     if cpt == 1:  
         etats = [str(i) for i in range(nb_etats-1)] + ['P']
@@ -536,9 +544,9 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
             std = automate.standardiser()
             f.write(std.Affichage() + "\n\n")
         else: 
-            f.write("L'automate est standard")
+            f.write("L'automate est standard\n")
 
-        f.write("=== DETERMINISATION ET COMPLETION ===\n")
+        f.write("\n=== DETERMINISATION ET COMPLETION ===\n")
         det = lecture_automate(chemin_automate)  # on recharge pour repartir de zéro
         if not det.est_deterministe():
             det.Determinisation_et_completion()
@@ -546,7 +554,7 @@ def Ecriture_trace(chemin_automate: str, chemin_trace: str):
         else:
             f.write("L'automate est déjà déterministe.")
 
-        f.write("=== MINIMISATION ===\n")
+        f.write("\n\n=== MINIMISATION ===\n")
         min, groupes = det.Minimisation()
         f.write(min.Affichage() + "\n")
         for cle, etats in groupes.items():

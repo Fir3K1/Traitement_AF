@@ -3,7 +3,8 @@ from tabulate import tabulate
 
 class Automate:
     def __init__(self, alphabet, etats, initial, final, transitions):
-        self.alphabet = sorted(alphabet)
+        #On initialise toutes les composantes de l'automate
+        self.alphabet = sorted(alphabet) #lettres triées
         self.etats = etats
         self.initial = initial
         self.final = final
@@ -47,6 +48,8 @@ class Automate:
 
     def Affichage(self):
         """Retourne une table de transitions formatée (str)."""
+
+        #On exclut 'e' (epsilon) de l'affichage normal des colonnes
         alphabet_affiche = [l for l in self.alphabet if l != 'e']
 
         donnee = []
@@ -66,6 +69,7 @@ class Automate:
 
             ligne = [marqueur, str(etat)]
             for lettre in self.alphabet:
+                 #On cherche tous les états d'arrivée depuis cet état avec cette lettre
                 arrivees = [str(t[2]) for t in self.transitions
                               if t[0] == etat and t[1] == lettre]
                 arrivees = sorted(arrivees)
@@ -78,12 +82,14 @@ class Automate:
 
 
     def est_standard(self):
+        #condition 1 : 1 seul état initial
         if len(self.initial) != 1:
             print(f"Non standard : {len(self.initial)} état(s) initial/initiaux.")
             return False
         
         i = self.initial[0]
         cpt = 0
+        #condition 2 : aucune transition ne REVIENT vers l'état initial
         for (dep, lettre, arr) in self.transitions:
             if arr == i:
                 print(f"Non standard : transition vers l'état initial "f"depuis '{dep}' avec '{lettre}'.")
@@ -98,18 +104,21 @@ class Automate:
 
 
     def est_deterministe(self):
+        #On vérifie la condition 1 : 1 seul état initial
         if len(self.initial) != 1:
             print(f"Non déterministe : {len(self.initial)} état(s) initial/initiaux.")
             return False
         
+        #on vérifie une 2e condition : automate asynchrone ?
         if 'e' in self.alphabet:
             print("Non déterministe : présence de ε-transitions (automate asynchrone).")
             return False
         
+        #3e condition : PAS 2 transitions avec la MEME lettre depuis le meme état
         vus = {}
         for (dep, lettre, arr) in self.transitions:
             cle = (dep, lettre)
-            if cle in vus:
+            if cle in vus: #si ce couple (etat, lettre) a deja été vu, automate non deterministe
                 print(f"Non déterministe : plusieurs transitions depuis "f"'{dep}' par '{lettre}'.")
                 return False
             vus[cle] = True
@@ -120,19 +129,19 @@ class Automate:
         cpt = 0
 
         for etat in self.etats:
-            l = []
-            for lettre in [x for x in self.alphabet if x != "e"]:
-                trouve = []
+            l = [] #liste des lettres manquantes pour chaque état
+            for lettre in [x for x in self.alphabet if x != "e"]: #on ignore epsilon (l'automate traité doit etre determinste)
+                trouve = [] #liste des transitions trouvées pour ce couple (état, lettre)
                 for (depart, fleche, arrivee) in self.transitions:
-                    if depart == etat and fleche == lettre and arrivee != "":
-                        trouve.append(lettre)
-                if lettre not in trouve : 
-                    l.append(lettre)       
+                    if depart == etat and fleche == lettre and arrivee != "": #peu importe la lettre de l'arrivée
+                        trouve.append(lettre) #on note qu'une transition est présente
+                if lettre not in trouve :  
+                    l.append(lettre)  #on note la lettre manquante d'un état donné
                     cpt += 1
             if l :
                 print(f"L'état {etat} ne possède pas de transition avec la lettre {l}.")
 
-        if cpt != 0:
+        if cpt != 0: #Si une transition manque
             print("--> L'automate n'est pas complet.")
             return
         else:
@@ -146,18 +155,21 @@ class Automate:
         if self.est_standard():
             return self
 
-        nouveau_init = 'i'
-        nouveaux_etats = [nouveau_init] + self.etats
+        nouveau_init = 'i' #nouvel état initial unique
+        nouveaux_etats = [nouveau_init] + self.etats #on le concatene dans une nouvelle liste d'états
         nouvelles_transitions = list(self.transitions)
 
+        """"On duplique toutes les transitions partant des anciens états initiaux
+            en les faisant partir du nouvel état initial avec des nouvelles transitions 't' """
         for ancien_init in self.initial:
             for (dep, lettre, arr) in self.transitions:
                 if dep == ancien_init:
                     t = (nouveau_init, lettre, arr)
-                    if t not in nouvelles_transitions:
+                    if t not in nouvelles_transitions: #pour éviter les doublons
                         nouvelles_transitions.append(t)
 
         nouveaux_finaux = list(self.final)
+        #Si un ancien état initial était terminal, le nouveau état initial est terminal aussi
         if any(e in self.final for e in self.initial):
             if nouveau_init not in nouveaux_finaux:
                 nouveaux_finaux.append(nouveau_init)

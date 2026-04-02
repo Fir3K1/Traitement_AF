@@ -310,7 +310,7 @@ class Automate:
         """Déterminise un automate et mets à jour ses attributs. Renvoie l'automate"""
         nouv_etats= []
         nouv_transitions = []
-        nouv_initial = [self.etat_to_string(self.initial)]
+        nouv_initial = [self.etat_to_string(self.initial)] #etat initial -> liste des anciens etat initiaux convertie en str
         nouv_final = []
 
         etats_a_traiter = [self.initial] #on commence la deter avec états init
@@ -318,18 +318,19 @@ class Automate:
 
         while etats_a_traiter:
             etat_present = etats_a_traiter.pop()  # On prend le 1er element et on le retire de la liste
-            for lettre in self.alphabet:  # ["a", "b"] pour chaque lettre, calcul des etats atteignables
+            for lettre in self.alphabet:  # ["a", "b"] pour chaque lettre, calcul des etats atteignables depuis l'état actuel
                 # 1. recherche de toutes les dest depuis un état
                 destinations = []  # represente les etats d'arrivés pour une lettre
                 # ajout différents état arrivée dans destination
                 for etat in etat_present:  # tous les états dans l'état présent (pour couvrir les états composés) [['2'], ['2', '3', '4', '5', '6']]
                     for (depart, fleche, arrivee) in self.transitions:
                         if depart == etat and fleche == lettre and arrivee not in destinations:
-                            destinations.append(arrivee)
+                            destinations.append(arrivee)    
 
-                # 2. traitement des novueaux états trouvés
+                # 2. traitement des novueaux états trouvés (etats finaux)
                 destinations.sort()  # trier pour éviter différentes combi de même état composé
                 for sous_etat in destinations:
+                    #Si un des sous états de 'destinations' est final dans l'automate original, alors le nv etat est final
                     if sous_etat in self.final and self.etat_to_string(destinations) not in nouv_final:
                         nouv_final.append(self.etat_to_string(destinations))  # modif finals
 

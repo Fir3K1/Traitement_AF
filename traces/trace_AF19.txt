@@ -10,7 +10,19 @@
 ╘═════╧═════════╧═════╛
 
 === STANDARDISATION ===
-L'automate est standard=== DETERMINISATION ET COMPLETION ===
+╒═════╤═════════╤═════╕
+│     │  etats  │  a  │
+╞═════╪═════════╪═════╡
+│  E  │    i    │  2  │
+├─────┼─────────┼─────┤
+│  S  │    0    │  0  │
+├─────┼─────────┼─────┤
+│     │    1    │  2  │
+├─────┼─────────┼─────┤
+│     │    2    │  0  │
+╘═════╧═════════╧═════╛
+
+=== DETERMINISATION ET COMPLETION ===
 L'automate est déjà déterministe.=== MINIMISATION ===
 ╒═════╤═════════╤═════╕
 │     │  etats  │  a  │

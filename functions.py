@@ -30,7 +30,7 @@ class Automate:
         """Prend une liste d'états en paramètre et renvoie un dico avec chaque état en clé et leurs fermetures ε"""
         res = {}
         for etat in etats:
-            res[etat] = [etat] + self.Fermeture_epsilon(etat)
+            res[etat] = [etat] + self.Fermeture_epsilon([etat])
         return res
 
 
@@ -80,7 +80,7 @@ class Automate:
     def est_standard(self):
         if len(self.initial) != 1:
             print(f"Non standard : {len(self.initial)} état(s) initial/initiaux.")
-            return
+            return False
         
         i = self.initial[0]
         cpt = 0
@@ -90,10 +90,10 @@ class Automate:
                 cpt += 1
         if cpt != 0:
             print("-->L'automate n'est pas standard.")
-            return
+            return False
         else: 
             print("L'automate est standard.")
-            return
+            return True
  
 
 
@@ -344,6 +344,8 @@ class Automate:
         return self
 
     def Determinisation_et_completion(self):
+        if self.est_deterministe:
+            return False
         if self.est_asynchrone():
             automate, dico = self.Determinisation_et_completion_asynchrone()
             print(automate.Affichage())
@@ -495,6 +497,7 @@ def lecture_automate(chemin):
     etats_finaux = donnees[3].split()[1:]
     nb_transitions = int(donnees[4])
 
+    cpt = 0
     transitions = []
     lettres = []
     for donnee in donnees[5: 5 + nb_transitions]:
@@ -503,8 +506,14 @@ def lecture_automate(chemin):
         transitions.append((depart, lettre, arrivee))
         if lettre not in lettres :
             lettres.append(lettre)
+        if depart == 'P' or arrivee == 'P':
+            cpt = 1
 
-    etats = [str(i) for i in range(nb_etats)]
+    if cpt == 1:  
+        etats = [str(i) for i in range(nb_etats-1)] + ['P']
+        print (etats)
+    else:
+        etats = [str(i) for i in range(nb_etats)]
 
     return Automate(sorted(lettres), etats, etats_initiaux, etats_finaux, transitions)
 

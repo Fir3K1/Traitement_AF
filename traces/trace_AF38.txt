@@ -1,8 +1,4 @@
-============================================================
-  AUTOMATE N°38
-============================================================
-
-[Automate initial]
+=== AUTOMATE INITIAL ===
 ╒═════╤═════════╤═════╤═════╕
 │     │  etats  │  a  │  b  │
 ╞═════╪═════════╪═════╪═════╡
@@ -15,36 +11,28 @@
 │  S  │    3    │  3  │  3  │
 ╘═════╧═════════╧═════╧═════╛
 
---- Test : standard ---
-
---- Test : déterministe ---
-
---- Test : complet ---
-
---- Déterminisation et complétion ---
-
---- Minimisation ---
-
---- Reconnaissance de mots ---
-  ''           → RECONNU
-  'a'          → RECONNU
-  'aa'         → RECONNU
-  'aaa'        → RECONNU
-  'b'          → RECONNU
-  'ab'         → RECONNU
-  'ba'         → RECONNU
-  'aab'        → RECONNU
-  'aba'        → RECONNU
-
---- Automate complémentaire (depuis AFDC) ---
+=== STANDARDISATION ===
 ╒═════╤═════════╤═════╤═════╕
 │     │  etats  │  a  │  b  │
 ╞═════╪═════════╪═════╪═════╡
-│  E  │    0    │  1  │  3  │
+│ ES  │    i    │  1  │  3  │
 ├─────┼─────────┼─────┼─────┤
-│     │    1    │  1  │  2  │
+│  S  │    0    │  1  │  3  │
 ├─────┼─────────┼─────┼─────┤
-│     │    2    │  3  │  3  │
+│  S  │    1    │  1  │  2  │
 ├─────┼─────────┼─────┼─────┤
-│     │    3    │  3  │  3  │
+│  S  │    2    │  3  │  3  │
+├─────┼─────────┼─────┼─────┤
+│  S  │    3    │  3  │  3  │
 ╘═════╧═════════╧═════╧═════╛
+
+=== DETERMINISATION ET COMPLETION ===
+L'automate est déjà déterministe.=== MINIMISATION ===
+╒═════╤═════════╤═════╤═════╕
+│     │  etats  │  a  │  b  │
+╞═════╪═════════╪═════╪═════╡
+│ ES  │   I0    │ I0  │ I0  │
+╘═════╧═════════╧═════╧═════╛
+  I0 : ['0', '1', '2', '3']
+
+=== COMPLEMENTAIRE ===

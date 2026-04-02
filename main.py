@@ -10,7 +10,6 @@ def afficher_menu():
     print("  5. Minimiser -> AFDCM")
     print("  6. Reconnaître des mots")
     print("  7. Automate complémentaire")
-    print("  8. Générer les fichiers de traces d'éxecution pour tous les automates")
     print("  8. Changer d'automate")
     print("  0. Quitter\n")
 
@@ -110,8 +109,11 @@ def main():
 
             elif choix == 4:
                 print("\n--- Déterminisation et complétion ---")
-                afdc = af.Determinisation_et_completion()
-                afdcm = None
+                if af.est_deterministe():
+                    print("L'automate est déjà déterministe.")
+                else: 
+                    afdc = af.Determinisation_et_completion()
+                    afdcm = None
 
             elif choix == 5:
                 print("\n--- Minimisation ---")

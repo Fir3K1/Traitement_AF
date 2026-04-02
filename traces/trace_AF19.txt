@@ -56,6 +56,8 @@ Complétion de l'automate déjà déterministe.
  ==> 'abbbbcdddddd' n'est PAS reconnu par l'automate.
  ==> '' n'est PAS reconnu par l'automate.
  ==> 'dddd' n'est PAS reconnu par l'automate.
+
+
 === COMPLEMENTAIRE ===
 ╒═════╤═════════╤═════╕
 │     │  etats  │  a  │
